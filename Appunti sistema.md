@@ -50,6 +50,30 @@ La prima operazione svolta da ciascun Job è quella di chiamare una Stored Proce
 1. recuperare dalle tabelle Flow Manager i record con Status = “Ready” e portarli in Status “In Progress”; 
 2. “pacchettizzare” questi record assegnando a ciascuno un valore di Group_Execute_ID.
 
+## Event Engine
+A grandi linee questo microservizio si occupa di "calcolare" degli eventi di business partendo dal Fast Storage.
+Quali eventi? “spedizione partita”, “ritiro fallito”, “tempo di arrivo stimato” ....
+Come? andando a leggere gli eventi di dominio (generati dal SGA)
+
+==TODO cosa sia SGA al momento mi sfugge, sarà il TMS? magari chiedere a Michele==
+
+Nel documento c'e scritto "Rispetto al caso Micro Batch, la Stored Procedure ritorna all’applicazione solo un record per ogni chiave di dominio". quindi ad ogni chunk corrisponde una e solo una chiave di dominio.
+Solite tre fasi: Reader, Processor, Writer.
+1. **Reader**: Partendo dalla chiave di dominio si recuperano tutti gli eventi di dominio che la riguardano. Importante la classe *ItemReader* che genera l'oggetto vero e proprio partendo da dei Repository (utile anche per vedere quali tipo di info vengono caricate)
+L'output di questa fase è un oggetto del tipo *TransportWorkloadEntity* che contiene tutti gli eventi di dominio che riguardano la chiave di dominio.
+2. **Processor**: La fase di Processor è responsabile della creazione vera e propria degli eventi di business calcolati dall’applicativo. gestita tutta da *it.batch.jobs.items.processor.EventEngineProcessor* in particolare il metodo **process**.
+Calcola una serie di metriche molto specifiche che non sto a riportare, ma che sono tutte scritte nel documento. Vengono tutte effettuate su un oggetto del tipo *TransportWorkloadEntity* che mi sembra di aver capito essere un "ordine di trasporto". In sintesi però il processo è questo:
+- calcolo eventi di business SGA, una serie di sigle che non capisco, specifiche del settore logistico.
+- milestonesTOLeg, anche qui, non so cosa sia TOLeg, ma e qualcosa di legato a come il pacco viene spedito (direct transport, shuttle, delivery, ...)
+- stato dell'ordine di trasporto, associamo alla *TransportWorkloadEntity* uno stato ( GIA, CON, COP, ICO, IVI) cosa vogliono dire non si sa.
+- calcolo eventi corporate. altra roba sconosciuta specificata in questo documento: *Order_LifeCycle_Status-Events_OM_rev05.wlsx*
+- Calcolo delle handling units da associare agli eventi corporate
+3. **Writer**: Abbiamo il nostro *TransportWorkloadEntity* con tutti i dati elaborati e li dobbiamo riscrivere sul Fast Storage.
+Può però verificarsi il caso in cui l’informazione salvata su Fast Storage potrebbe essere momentaneamente incompleta, ad esempio perché è stato elaborato un evento di giacenza prima dell’effettiva creazione dell’ordine di trasporto a cui quella giacenza è collegata.
+Per tale ragione gli eventi elaborati hanno un attributo che può essere i **COMPLETE** o **ONLY_SIGNALING**.
+Nel caso di **COMPLETE** l’evento viene scritto su Fast Storage (e su di un topic kafka ***Signaling Topic***), nel caso di **ONLY_SIGNALING** l’evento viene scritto solo sul Topic Kafka (in realtà anche su una tabela dedicata di Fast Storage, Transactional.SignalingTopics).
+Attento a non confondere il l'evento con la *TrasnportWorkloadEntity*, se l'evento non è completo effettivamente non vengono scritte una serie di cose sul Fast Storage (tabelle TransportOrdersEvents, TOLeg, Transactional.TransportOrder e TransportOrdersEventsCorporate), ma c'è comunque una operazione di scrittura del'oggetto *TransportWorkloadEntity*  (EventEngineWriter.java righe 129-137).
+
 # Step 1 (Flink Spike)
 ## Obbiettivo
 Sperimentare Apache Flink per capire se è possibile effettuare il passaggio da Spring Batch a Flink.
