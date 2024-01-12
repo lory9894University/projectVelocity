@@ -33,7 +33,7 @@ This method is a part of Spring Data JPA's query creation mechanism. The method 
 ```
 2. **Processor**: Fase in cui si trasformano gli Eventi di Dominio recuperati durante la fase di Reader in una serie di record pronti alla scrittura, ovvero in una serie di oggetti di tipo Entity. 
 Oggetti Java proprio, prima erano Eventi, ora sono Oggetti.
-==TODO C'è tutto un discorso di mappatura su tabelle che non ho capito, chiedere a Michele==.
+==TODO C'è tutto un discorso di mappatura su tabelle che non ho capito pag 29 di MicroBatch, chiedere a Michele==.
 Lo si fa tramite *MapStruct*, che è una libreria che permette di mappare oggetti di tipo diverso, in questo caso da Evento a Oggetto.
 
 3. **Writer**: Fase finale di scrittura sul Fast Storage.
@@ -74,6 +74,33 @@ Per tale ragione gli eventi elaborati hanno un attributo che può essere i **COM
 Nel caso di **COMPLETE** l’evento viene scritto su Fast Storage (e su di un topic kafka ***Signaling Topic***), nel caso di **ONLY_SIGNALING** l’evento viene scritto solo sul Topic Kafka (in realtà anche su una tabela dedicata di Fast Storage, Transactional.SignalingTopics).
 Attento a non confondere il l'evento con la *TrasnportWorkloadEntity*, se l'evento non è completo effettivamente non vengono scritte una serie di cose sul Fast Storage (tabelle TransportOrdersEvents, TOLeg, Transactional.TransportOrder e TransportOrdersEventsCorporate), ma c'è comunque una operazione di scrittura del'oggetto *TransportWorkloadEntity*  (EventEngineWriter.java righe 129-137).
 
+## Kafka Streams
+Documento generico di tutti i *Kafka Streams* sviluppati, prendo come esempio pratico *Velocity-Spedizioni*.
+
+Prima nota interessante: Non viene usato ***Debezium*** duro e puro, bensì lo usiamo sotto forma di *Kafka Connector* (il plugin in questione è [debezium-connector-sqlserver](https://www.confluent.io/hub/debezium/debezium-connector-sqlserver)). 
+Seconda nota, c'è uno **Schema Registry**, questa infrastruttura è uscita direttamente dal corso di Confluent.
+Gli schemi sono *Avro*, e si posso trovare in *src/main/resources/avro/*
+
+### Ricezione di eventi
+Il nostro bravo Debezium si occupa di rilevare i cambiamenti sul DB e li pubblica su diversi topic kafka, uno per tabella. ( se non ricordo male c'è una tabella per ogni **Dominio**).
+tramite il Kafka Streams si va a leggere questi topic, in particolare la classe *it.quantyca.kafka.streams.processors.keyvaluemappers.KeyValueMapper* fa la seguente operazione:
+Genera una chiave ``` <istanza db sorgente> + ">" + <id_transaction> + "-" + <chiave logica testata> ```, crea un nuovo *TransactionEvent* con tale chiave e con contenuto il contenuto del messaggio CDC di Debezium, publica tale oggetto su un topic kafka dedicato ***single***.
+
+A seconda dello stream che stiamo sviluppando possiamo guardare solo un DB piuttosto che un altro, si specifica il db nella proprietà *database.list* di *application.properties*
+
+### Aggregazione di eventi
+Ottenuto lo stream di eventi ben formato possiamo avere 3 tipi di aggregazione: (classe *StreamAggregator*)
+1. eventLocalStream 
+2. endTransactionGlobalTable. Filtro gli eventi di *endTransaction* ==TODO cosa diavolo è un evento di END_TRANSACTION? probabilmente roba di Debezium, ma c'è uno State-Store ed un aggregatore dedicato *endTransactionGlobalTable*==
+
+## Transaction Processing
+Vogliamo passare da un *TransactionEvent* ad un *Domain Event*. Classe di riferimento *DomainEventPublisher*.
+
 # Step 1 (Flink Spike)
 ## Obbiettivo
 Sperimentare Apache Flink per capire se è possibile effettuare il passaggio da Spring Batch a Flink.
+
+Ciao, ti invio un altro messaggio di riepilogo, leggilo quando hai tempo, tanto fino a Martedì sono impegnato con i corsi di formazione.
+
+Ho guardato tutto quello che mi avevi detto (Event-engine, Micro-batch, Kafka Streams, Micro-batch-FTL). Tutto abbastanza chiaro, ho un paio di domande che vorrei farti.
+Ci ho messo un po' perchè per capire tutto ho dovuto leggere anche un po' di documentazione su Kafka e su Stream, Connector, etc... (ho guardato un breve corso). Oggi pomeriggio volevo iniziare la stesura della tesi (dato che ho fresca in mente l'architettura), ma se preferisci che ci sentiamo ci sono. Altrimenti, senza fretta, la prossima settimana.
