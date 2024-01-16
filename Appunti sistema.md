@@ -99,8 +99,3 @@ Vogliamo passare da un *TransactionEvent* ad un *Domain Event*. Classe di riferi
 # Step 1 (Flink Spike)
 ## Obbiettivo
 Sperimentare Apache Flink per capire se è possibile effettuare il passaggio da Spring Batch a Flink.
-
-Ciao, ti invio un altro messaggio di riepilogo, leggilo quando hai tempo, tanto fino a Martedì sono impegnato con i corsi di formazione.
-
-Ho guardato tutto quello che mi avevi detto (Event-engine, Micro-batch, Kafka Streams, Micro-batch-FTL). Tutto abbastanza chiaro, ho un paio di domande che vorrei farti.
-Ci ho messo un po' perchè per capire tutto ho dovuto leggere anche un po' di documentazione su Kafka e su Stream, Connector, etc... (ho guardato un breve corso). Oggi pomeriggio volevo iniziare la stesura della tesi (dato che ho fresca in mente l'architettura), ma se preferisci che ci sentiamo ci sono. Altrimenti, senza fretta, la prossima settimana.
