@@ -19,6 +19,7 @@ Successivamente si potrà decidere se effettuare il passaggio o meno ed in tal c
 ## MicroBatch
 A grandi linee questo microservizio "ricostruisce" una entità a partire da tutti gli eventi che la riguardano, poi la scrive su Fast Storage.
 Gli eventi non sono presi dal topic Kafka, bensì dal Fast Storage, in questo caso un db SQL (microsoft sqlserver).
+Come fa? Il DB SQL Server “Fast Storage” riceve gli eventi di dominio elaborati dalle applicazioni Kafka Streams in modo continuo, grazie ad un connettore JDBC di tipo Sink, che scrive il contenuto dell’evento, ovvero il JSON strutturato, all’interno di un layer di atterraggio del Fast Storage. In particolare è stato definito un apposito schema chiamato DomainEvents.
 
 Dopo la "ricostruzione" l'oggetto viene riscritto nel Fast Storage, credo eliminando gli eventi che lo riguardavano e che non sono più necessari (ma anche no, potrebbero servire ad altri. nel dubbio ==TODO chiedi a Michele==).
 
