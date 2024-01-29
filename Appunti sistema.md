@@ -21,7 +21,8 @@ A grandi linee questo microservizio "ricostruisce" una entità a partire da tutt
 Gli eventi non sono presi dal topic Kafka, bensì dal Fast Storage, in questo caso un db SQL (microsoft sqlserver).
 Come fa? Il DB SQL Server “Fast Storage” riceve gli eventi di dominio elaborati dalle applicazioni Kafka Streams in modo continuo, grazie ad un connettore JDBC di tipo Sink, che scrive il contenuto dell’evento, ovvero il JSON strutturato, all’interno di un layer di atterraggio del Fast Storage. In particolare è stato definito un apposito schema chiamato DomainEvents.
 
-Dopo la "ricostruzione" l'oggetto viene riscritto nel Fast Storage, credo eliminando gli eventi che lo riguardavano e che non sono più necessari (ma anche no, potrebbero servire ad altri. nel dubbio ==TODO chiedi a Michele==).
+Dopo la "ricostruzione" l'oggetto viene riscritto nel Fast Storage, credo eliminando gli eventi che lo riguardavano e che non sono più necessai.
+No, gli eventi non vengono eliminati dopo la lettura, infatii potrebbero servire in futuro, quel che succede è che glli eventi nel db hanno una "scadenza", quando sono troppo vecchi è il db stesso ad occuparsi di farli sparire.
 
 La ricostruzione avviene in 3 fasi:
 1. **Reader**: Durante la fase di Reader vengono recuperati dal Fast Storage tutti gli Eventi di Dominio che sono stati assegnati dal [partizionatore](#partizionatore) a quello specifico chunk.
@@ -34,8 +35,8 @@ This method is a part of Spring Data JPA's query creation mechanism. The method 
 ```
 2. **Processor**: Fase in cui si trasformano gli Eventi di Dominio recuperati durante la fase di Reader in una serie di record pronti alla scrittura, ovvero in una serie di oggetti di tipo Entity. 
 Oggetti Java proprio, prima erano Eventi, ora sono Oggetti.
-==TODO C'è tutto un discorso di mappatura su tabelle che non ho capito pag 29 di MicroBatch, chiedere a Michele==.
 Lo si fa tramite *MapStruct*, che è una libreria che permette di mappare oggetti di tipo diverso, in questo caso da Evento a Oggetto.
+Attenzione, MicroBatch non tiene aggiornata una sola tabella di Eventi di Dominio, bensì un gran numero. Quindi in fase di processing abbiamo diverse mappature a partire dagli stessi dati. ==TODO quando potrò vedere il db avrò anche modo di inserire esempi delle tabelle su cui va a scrivere microbatch==
 
 3. **Writer**: Fase finale di scrittura sul Fast Storage.
 É una scrittura transazionale, quindi credo ACID.
@@ -54,9 +55,7 @@ La prima operazione svolta da ciascun Job è quella di chiamare una Stored Proce
 ## Event Engine
 A grandi linee questo microservizio si occupa di "calcolare" degli eventi di business partendo dal Fast Storage.
 Quali eventi? “spedizione partita”, “ritiro fallito”, “tempo di arrivo stimato” ....
-Come? andando a leggere gli eventi di dominio (generati dal SGA)
-
-==TODO cosa sia SGA al momento mi sfugge, sarà il TMS? magari chiedere a Michele==
+Come? andando a leggere gli eventi di dominio (generati dal SGA). SGA sarebbe il TMS
 
 Nel documento c'e scritto "Rispetto al caso Micro Batch, la Stored Procedure ritorna all’applicazione solo un record per ogni chiave di dominio". quindi ad ogni chunk corrisponde una e solo una chiave di dominio.
 Solite tre fasi: Reader, Processor, Writer.
