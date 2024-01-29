@@ -91,7 +91,7 @@ A seconda dello stream che stiamo sviluppando possiamo guardare solo un DB piutt
 ### Aggregazione di eventi
 Ottenuto lo stream di eventi ben formato possiamo avere 3 tipi di aggregazione: (classe *StreamAggregator*)
 1. eventLocalStream 
-2. endTransactionGlobalTable. Filtro gli eventi di *endTransaction* ==TODO cosa diavolo è un evento di END_TRANSACTION? probabilmente roba di Debezium, ma c'è uno State-Store ed un aggregatore dedicato *endTransactionGlobalTable*==
+2. endTransactionGlobalTable. Filtro gli eventi di *endTransaction*. Il Topic Transaction viene valorizzato da Debezium e genera, per ogni transazione, due messaggi, uno di BEGIN e uno di END. Il messaggio di END transaction è molto importante perchè contiene l’informazione di “quanti sono i record CDC che hanno impattato quella specifica transazione”. Questa informazione, chiamata event_count, viene salvata all’interno di uno State Store globale, e serve alle applicazioni Kafka Streams per sapere quanti messaggi “aspettare” per considerare completa una certa transazione
 
 ## Transaction Processing
 Vogliamo passare da un *TransactionEvent* ad un *Domain Event*. Classe di riferimento *DomainEventPublisher*.
