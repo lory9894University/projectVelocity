@@ -1,7 +1,7 @@
 \chapter{Tecnologie utilizzate}
 \label{ch:Tecnologies}
 
-\section{Kafka}
+\section{Apache Kafka}
 \label{ch:kafka_overview}
 %https://kafka.apache.org/intro
 \textit{Apache Kafka is an open-source distributed event streaming platform.}\cite{kafkawebsite}\\\\
@@ -15,8 +15,8 @@ Un \textbf{Evento} è un record all'interno del sistema di qualcosa che si è ve
 \end{itemize}
 \texttt{Kafka} può eseguire 4 operazioni su un \textbf{Evento}:
 \begin{itemize}
-    \item \textbf{Scrittura}: L'evento può essere generato da un \textit{Producer}(\ref{subsec:kafka_endpoints}) che lo pubblica all'interno di un \textit{Topic}.
-    \item \textbf{Lettura}: L'evento può essere letto da un \textit{Consumer}(\ref{subsec:kafka_endpoints}) che è iscritto ad un \textit{Topic} e ne riceve gli aggiornamenti.
+    \item \textbf{Scrittura}: L'evento può essere generato da un \textit{Producer}(\ref{subsec:kakfa_clients}) che lo pubblica all'interno di un \textit{Topic}.
+    \item \textbf{Lettura}: L'evento può essere letto da un \textit{Consumer}(\ref{subsec:kakfa_clients}) che è iscritto ad un \textit{Topic} e ne riceve gli aggiornamenti.
     \item \textbf{Archiviazione} o \textbf{Storage}: Un evento può essere salvato su un \textit{Topic} in maniera sicura e duratura. Differentemente da un \texttt{Message Broker}, che offre le stesse funzionalità di lettura e scrittura, i record all'interno di un \textit{Topic} sono permanenti, questo argomento è maggiormente approfondito nella sezione \textit{Topic}(\ref{subsec:kafka_topics})
     \item \textbf{Elaborazione}: Gli \textbf{Eventi} possono essere elaborati, sia in gruppo che singolarmente, questa elaborazione può essere effettuata tramite i cosiddetti \texttt{Kafka Streams}(\ref{subsec:kafka_streams})
 \end{itemize}
@@ -25,7 +25,8 @@ In particolare su ogni \texttt{Broker} sono salvati uno o più \textit{Topic} ed
 
 \subsection{Topic}
 \label{subsec:kafka_topics}
-Un \textit{Kafka Topic} è un database ad eventi, al posto di pensare in termini di oggetti, si pensa in termini di eventi. 
+
+Un \textit{Kafka Topic} è un database ad eventi, al posto di pensare in termini di oggetti, si pensa in termini di eventi.
 Diversi microservizi possono consumare o pubblicare sullo stesso \textit{Topic}, similmente ad un \texttt{Message Broker} infatti i \textit{Topic} sono \textit{multi-producer} e \textit{multi-subscribers}.
 A differenza di un \texttt{Message Broker} però un \textit{Topic} può mantenere dei record in maniera sicura per una durata di tempo indefinita, come se fosse un database.Gli \textbf{Eventi} infatti non sono eliminato dopo esser stati letti da un \textit{Consumer}. Il tempo di mantenimento di un record può essere configurato in modo da stabilire un equilibrio tra quantità di dati salvati e efficienza delle elaborazioni dato che ad un numero maggiore di record corrisponde un tempo di elaborazione maggiore.\\\\
 I \textit{Topic} sono partizionati, per permettere high-availability, fault-tollerance e soprattutto consentire la lettura/scrittura in parallelo.
@@ -34,9 +35,13 @@ Eventi aventi la stessa \textit{Key} sono scritti nella stessa partizione e \tex
 Come citato prima il partizionamento permette anche la scrittura in parallelo, infatti se la partizione su cui due \textit{Producer} scrivono è differente e possibile effettuare l'operazione senza doversi preoccupare dei problemi generati dalla scrittura concorrente, anche se il \textit{Topic} è il medesimo.
 
 
-\subsection{Consumer/Producer}
-\label{subsec:kafka_endpoints}
-\todo{discorso di client vs server}
+\subsection{Clients}
+\label{subsec:kakfa_clients}
+I \texttt{Consumers} ed i \texttt{Producers}, insieme ai \textit{Topics}, sono gli elementi alla base del funzionamento di \textit{Kafka}.
+Il \textit{Cluster Kafka} composto dai vari \textit{Brokers} svolge il ruolo di \textbf{Server}, mentre i \texttt{Consumers} ed i \texttt{Producers} fungono da \textbf{Clients},
+collegandosi al cluster e interagendo con i dati presenti sui \textit{Topics}.
+I \textit{Clients} sono i componenti che si occupano di implementare la logica di business e sono quindi scritti dallo sviluppatore che sfruttera le due API messe a disposizione da Kakfa,
+\textit{Consumer API} e \textit{Producer API}
 
 \subsection{Streams}
 \label{subsec:kafka_streams}
@@ -46,18 +51,25 @@ Nascono con l'intenzione di "astrarre" tutte le operazioni di basso livello qual
 In pratica qualsiasi operazione implementabile tramite \texttt{Kafka Streams} sarebbe allo stesso modo implementabile da un microservizio che legge da un \textit{Topic}, elabora i dati e li riscrive su un \textit{Topic}(lo stesso o un altro), ma grazie agli \texttt{Streams} si possono delegare le operazioni di collegamento con il \texttt{Kakfka Cluster} e concentrarsi solamente sull'elaborazione dei dati.
 L'utilizzo dei \texttt{Kafka Streams} ha i seguenti vantaggi:
 \begin{itemize}
-    \item efficienza: Il tipo di computazione è per-record, cioè ogni dato pubblicato sul \textit{Topic} a cui lo \texttt{Stream} è collegato viene subito processato. Non c'è bisogno di effettuare "batching", cioè richiedere i dati ad intervalli di tempo regolari ed elaborare solo i dati giunti in tale intervallo. Il sistema può lavorare quasi in tempo reale.  
-    \item scalabilità: Gli \texttt{Stream} sono scalabili e fault-tollerant. Essendo \textit{Kafka} pensato per essere un sistema distribuito anche gli \texttt{Streams} sono pensati per essere scalati e distribuiti, se si creano diverse istanze dello stesso \texttt{Stream} queste collaboreranno automaticamente suddividendosi il carico computazionale.
-    \item riuso: si utilizza una chiamata all API al posto di riscrivere lo stesso codice per differenti microservizi.
+    \item Efficienza: Il tipo di computazione è per-record, cioè ogni dato pubblicato sul \textit{Topic} a cui lo \texttt{Stream} è collegato viene subito processato. Non c'è bisogno di effettuare "batching", cioè richiedere i dati ad intervalli di tempo regolari ed elaborare solo i dati giunti in tale intervallo. Il sistema può lavorare quasi in tempo reale.  
+    \item Scalabilità: Gli \texttt{Stream} sono scalabili e fault-tollerant. Essendo \textit{Kafka} pensato per essere un sistema distribuito anche gli \texttt{Streams} sono pensati per essere scalati e distribuiti, se si creano diverse istanze dello stesso \texttt{Stream} queste collaboreranno automaticamente suddividendosi il carico computazionale.
+    \item Riuso del codice: si utilizza una chiamata all API al posto di riscrivere lo stesso codice per differenti microservizi.
 \end{itemize}
 
 \subsection{Connector}
 \label{subsec:kafka_connectors}
-I \texttt{Connectors} sono particolari tipi di \texttt{Consumers/Producers}, il cui scopo è mettere in comunicazione \textit{Kafka} con altri sistemi. I \texttt{Connectors} producono flussi di eventi partendo da dati ricevuti da un altro sistema, oppure consumano da un topic e inviano i dati letti ad una applicazione esterna.Per esempio un \texttt{Connector}ad un database relazionale potrebbe catturare tutte le operazioni effettuate su una tabella e generare un flusso di eventi in cui ogni evento corrisponde ad un cambiamento.\todo{espandere}
-
+I \texttt{Connectors} sono particolari tipi di \texttt{Consumers/Producers}, il cui scopo è mettere in comunicazione \textit{Kafka} con altri sistemi.
+I \texttt{Connectors} producono flussi di eventi partendo da dati ricevuti da un altro sistema (\textit{Source Connector}), oppure consumano da un topic e inviano i dati letti ad una applicazione esterna(\textit{Sink Connector}).
+Per esempio un \texttt{Connector} ad un database relazionale potrebbe catturare tutte le operazioni effettuate su una tabella e generare un flusso di eventi in cui ogni evento corrisponde ad un cambiamento.
+Similmente ai \textit{Kafka Streams} \ref{subsec:kafka_streams} i principali vantaggi di utilizzare un \texttt{Connector} piuttosto che scrivere da se il codice per svolgere lo stesso compito sono
+\textbf{efficienza},\textbf{scalabilità} e \textbf{riuso del codice}.
+Inoltre sono presenti diversi repository online dove trovare \texttt{Connector} già pronti, sviluppati dalla community o dagli sviluppatori delle applicazioni esterne (sqlserver, JDBC, Amazon S3),
+uno dei più diffusi è il \texttt{confluent-hub} https://www.confluent.io/product/connectors/ \todo(questo deve diventare un link o essere spostato in bibliografia)
 
 \section{Debezium}
 \label{sec:debezium_overview}
-
+\textit{Debezium is an open source distributed platform for change data capture. Start it up, point it at your databases, and your apps can start responding to all of the inserts, updates, and deletes that other apps commit to your databases.}\cite*{debeziumwebsite}\\\\
+\texttt{Debezium} è una piattaforma distribuita open source per la cattura dei dati di modifica, permette di catturare le operazioni di modifica effettuate su un database (\textit{insert, update e delete}) e di trasformarle in eventi.
+\texttt{Debezium} è costruito sulla base di \textit{Apache Kafka}
 \section{Apache Flink}
 \label{sec:flink_overview}

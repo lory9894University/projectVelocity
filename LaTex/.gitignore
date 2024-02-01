@@ -12,3 +12,4 @@ main.log
 *.toc
 out/*
 .idea/*
+.vscode/*
