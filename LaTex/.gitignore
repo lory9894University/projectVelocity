@@ -5,5 +5,10 @@
 *.synctex.gz
 *.aux
 *.fls
+*.bcf
+main.log
+*.run.xml
+*.out
+*.toc
 out/*
 .idea/*
