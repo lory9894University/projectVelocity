@@ -64,12 +64,18 @@ Per esempio un \texttt{Connector} ad un database relazionale potrebbe catturare 
 Similmente ai \textit{Kafka Streams} \ref{subsec:kafka_streams} i principali vantaggi di utilizzare un \texttt{Connector} piuttosto che scrivere da se il codice per svolgere lo stesso compito sono
 \textbf{efficienza},\textbf{scalabilità} e \textbf{riuso del codice}.
 Inoltre sono presenti diversi repository online dove trovare \texttt{Connector} già pronti, sviluppati dalla community o dagli sviluppatori delle applicazioni esterne (sqlserver, JDBC, Amazon S3),
-uno dei più diffusi è il \texttt{confluent-hub} https://www.confluent.io/product/connectors/ \todo(questo deve diventare un link o essere spostato in bibliografia)
+uno dei più diffusi è il \texttt{confluent-hub} https://www.confluent.io/product/connectors/ \todo{questo deve diventare un link o essere spostato in bibliografia}
 
 \section{Debezium}
 \label{sec:debezium_overview}
 \textit{Debezium is an open source distributed platform for change data capture. Start it up, point it at your databases, and your apps can start responding to all of the inserts, updates, and deletes that other apps commit to your databases.}\cite*{debeziumwebsite}\\\\
 \texttt{Debezium} è una piattaforma distribuita open source per la cattura dei dati di modifica, permette di catturare le operazioni di modifica effettuate su un database (\textit{insert, update e delete}) e di trasformarle in eventi.
-\texttt{Debezium} è costruito sulla base di \textit{Apache Kafka}
+Nativamente tutti i più comuni database sono supportati, tra cui \textit{MySQL, PostgreSQL, MongoDB, SQL Server, Oracle, ...}.\\\\
+\texttt{Debezium} è costruito sulla base di \textit{Apache Kafka}, di conseguenza è facilmente integrabile con esso.
+Ci sono infatti due modi per utilizzare questa piattaforma: come un sistema distriubuito a se stante oppure tramite un \texttt{Kafka Connector}(\ref{subsec:kafka_connectors}).
+Il primo modo presenta tutti i vantaggi di un sistema distribuito, come la scalabilità e la fault-tollerance, ma ha un costo in termini di risorse, di configurazione e di gestione.
+È inoltre possibile consumare gli eventi prodotti tramite un qualsiasi sistema esterno, senza dover necessariamente utilizzare \textit{Kafka}.
+Se invece si ha già una infrastruttura già basata su \textit{Kafka} è molto più conveniente utilizzare \texttt{Debezium} come \texttt{Connector}, con un considerevole risparmio di risorse e di tempo.  
+
 \section{Apache Flink}
 \label{sec:flink_overview}
