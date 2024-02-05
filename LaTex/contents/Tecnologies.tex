@@ -111,25 +111,41 @@ ma non è limitato a ciò, può essere eseguito anche in un ambiente \textit{sta
 \end{figure}
 Il \textit{runtime environment} di Flink è composto da due tipi di processi: un JobManager e uno o più TaskManager.
 \begin{itemize}
-    \item \textbf{JobManager}: è il master del \textit{Cluster}, si occupa di coordinare il lavoro dei \textit{TaskManager} decidendo quando eseguire un task,
+    \item \textbf{JobManager}: è il master del \textit{Cluster}, si occupa di coordinare il lavoro dei \textit{TaskManager} decidendo quando eseguire un Task,
     gestire gli errori in fase di esecuzione ed effettuare checkpointing 
     \footnote{Il meccanismo di checkpoint è una strategia di \textit{fault tolerance} basata sul mantenere degli snapshots di vari componenti del sistema
     per poterlo ripristinare in caso di guasto}.
     Le principali responsabilità del \textit{JobManager} sono due: la gestione delle risorse e la gestione dei job.
     \begin{enumerate}
-        \item \textbf{Gestione delle risorse}: il \textit{JobManager} gestisce i \textbf{task slots}\ref{subsubsec:flink_task_slots} dei \textit{TaskManager}, cioè le risorse computazionali.
+        \item \textbf{Gestione delle risorse}: il \textit{JobManager} gestisce i \textbf{Task Slots}\ref{subsubsec:flink_Task_slots} dei \textit{TaskManager}, cioè le risorse computazionali.
         Se l'ambiente di esecuzione è distribuito (come ad esempio \textit{YARN} o \textit{Kubernetes}) il \textit{JobManager} avviare nuove istanze di \textit{TaskManager} in base alle necessità.
         \item \textbf{Gestione dei job}: il \textit{JobManager} si occupa di ricevere i job da eseguire, di distribuirli tra i \textit{TaskManager} e di monitorarne l'esecuzione.
         Inoltre fornisce una REST API ed una interfaccia web per monitorare lo stato del cluster e per ricevere nuovi jobs.
     \end{enumerate}
     C'è sempre almeno un \textit{JobManager}. Una configurazione \textit{Hig-Availability} potrebbe avere più \textit{JobManager}, di cui uno è sempre il leader e gli altri sono in standby.
-    \item \textbf{TaskManager}: sono i worker del \textit{Cluster}, si occupano di eseguire i task e di ricevere e inviare i dati.
-    La più piccola unità di esecuzione in un TaskManager è un \textit{task slot} \ref{subsubsec:flink_task_slots}.
-    Il numero di slot di task in un TaskManager indica il numero di task eseguibili in parallelo.
-    
+    \item \textbf{TaskManager}: sono i worker del \textit{Cluster}, si occupano di eseguire i Task e di ricevere e inviare i dati.
+    La più piccola unità di esecuzione in un TaskManager è un \textit{Task Slot} \ref{subsubsec:flink_Task_slots}.
+    Il numero di slot di Task in un TaskManager indica il numero di Task eseguibili in parallelo.
 \end{itemize}
 
-\subsubsection{task slots}
-\label{subsubsec:flink_task_slots}
-
-
+\subsubsection{Task Slots}
+\label{subsubsec:flink_Task_slots}
+Per comprendere il concetto di \textit{Task Slot} è necessario comprendere come viene gestito il\textit{parallelismo} in \texttt{Flink}.    
+Un programma scritto tramite l'API di \texttt{Flink} non viene eseguito sequenzialmente, ma viene diviso in sottoprocessi che possono essere eseguiti in parallelo.
+Ad esempio un semplice programma che riceve dei dati, li filtra e li salva su un database potrebbe essere diviso in tre sottoprocessi: ricezione, filtro e scrittura.
+Questi tre sottoprocessi sono chiamati \textit{Task} e possono essere, parzialmente, eseguiti in parallelo.
+\todo{c'è anche il discorso del partitioning dei dati, quando ne scrivo la sezione aggiungo qui}
+\\\\
+Ogni \texttt{TaskManage} è sostanzialmente un processo che esegue la JVM ed il codice, quindi può eseguire uno o più sottoprocessi in diversi \textit{threads}.
+Ogni \texttt{Task Slot} rappresenta un sottoinsieme di risorse computazionali di un \texttt{TaskManager}, ad esempio un \texttt{TaskManager}
+con 3 \texttt{Task Slot} dedicherà 1/3 delle sue risorse a ciascun \texttt{Task Slot}.
+Più \texttt{Task Slot} si hanno a disposizione, più \texttt{Task} si possono eseguire in parallelo, ma anche meno risorse si avranno a disposizione per ciascun \texttt{Task}.
+Inoltre se due \texttt{Task} operano sugli stessi dati è possibile effettuare \textit{slot sharing}, cioè permettere a due \texttt{Task} di condividere un \texttt{Task Slot}, limitando il parallelismo ma riducendo il consumo di memoria.
+Come si può vedere nell'immagine \ref{fig:flink_slots} dove i \texttt{Task} \textit{Source} e \textit{Map} condividono un \texttt{Task Slot}.
+%inserire immagine di slots
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/flink/Tasks_slots.jpg}
+    \caption{Task Slots sharing}
+    \label{fig:flink_slots}
+\end{figure}
