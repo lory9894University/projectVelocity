@@ -79,3 +79,57 @@ Se invece si ha già una infrastruttura già basata su \textit{Kafka} è molto p
 
 \section{Apache Flink}
 \label{sec:flink_overview}
+\textit{Apache Flink is a framework and distributed processing engine for stateful computations over unbounded and bounded data streams. Flink has been designed to run in all common cluster environments, perform computations at in-memory speed and at any scale.}\cite*{flinkwebsite}\\\\
+
+\textit{Apache Flink} è sia un framework che un motore di elaborazione distribuito per la computazione di flussi di dati, \textit{bounded} e \textit{unbounded}.
+Può essere utilizzato per elaborare dati in tempo reale, ma anche per elaborare grandi quantità di dati in batch.
+Fornisce sia una API per la creazione di applicazioni di elaborazione di dati, sia un \textit{runtime} environment distribuito per eseguirle,
+per questo motivo si può considerare sia un \textit{framework} che un \textit{motore di esecuzione}.
+Come anticipiato i tipi di dato trattato sono sempre \texttt{streams} che possono essere:
+\begin{itemize}
+    \item \textbf{Unbounded}: un flusso di dati che non ha un inizio o una fine, come ad esempio un flusso di eventi generati da un sensore.
+    \item \textbf{Bounded}: un flusso di dati con un inizio e una fine, come ad esempio un file o una tabella di un database.
+\end{itemize}
+Sui flussi \textit{Bounded} possono essere eseguite tutte le operazioni eseguibili sui flussi \textit{Unbounded}, ma non viceversa.
+Per fare ciò bisogna ricorrere a delle operazioni di \textit{windowing}, cioè dividere il flusso in finestre (temporali o di conteggio 
+\footnote{Per \textit{finestra di conteggio} si intende una finestra che contiene un numero fisso di elementi, ad esempio una finestra di 100 elementi.
+In inglese si parla di \textit{count window}.}
+) e poi eseguire le operazioni su queste finestre.
+
+\subsection{Windowing}
+\label{subsec:flink_windowing}
+
+\subsection{Flink Cluster}
+\label{subsec:flink_cluster}
+Un \textit{Flink Cluster} è penasto per essere eseguito in un ambiente distribuito, come ad esempio un \textit{Hadoop YARN, docker} o \textit{Kubernetes},
+ma non è limitato a ciò, può essere eseguito anche in un ambiente \textit{standalone} oppure si può sfruttare solo la API di Flink senza dover necessariamente eseguire un \textit{Cluster}.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/flink/cluster.jpg}
+    \caption{Flink Cluster}
+    \label{fig:flink_cluster}
+\end{figure}
+Il \textit{runtime environment} di Flink è composto da due tipi di processi: un JobManager e uno o più TaskManager.
+\begin{itemize}
+    \item \textbf{JobManager}: è il master del \textit{Cluster}, si occupa di coordinare il lavoro dei \textit{TaskManager} decidendo quando eseguire un task,
+    gestire gli errori in fase di esecuzione ed effettuare checkpointing 
+    \footnote{Il meccanismo di checkpoint è una strategia di \textit{fault tolerance} basata sul mantenere degli snapshots di vari componenti del sistema
+    per poterlo ripristinare in caso di guasto}.
+    Le principali responsabilità del \textit{JobManager} sono due: la gestione delle risorse e la gestione dei job.
+    \begin{enumerate}
+        \item \textbf{Gestione delle risorse}: il \textit{JobManager} gestisce i \textbf{task slots}\ref{subsubsec:flink_task_slots} dei \textit{TaskManager}, cioè le risorse computazionali.
+        Se l'ambiente di esecuzione è distribuito (come ad esempio \textit{YARN} o \textit{Kubernetes}) il \textit{JobManager} avviare nuove istanze di \textit{TaskManager} in base alle necessità.
+        \item \textbf{Gestione dei job}: il \textit{JobManager} si occupa di ricevere i job da eseguire, di distribuirli tra i \textit{TaskManager} e di monitorarne l'esecuzione.
+        Inoltre fornisce una REST API ed una interfaccia web per monitorare lo stato del cluster e per ricevere nuovi jobs.
+    \end{enumerate}
+    C'è sempre almeno un \textit{JobManager}. Una configurazione \textit{Hig-Availability} potrebbe avere più \textit{JobManager}, di cui uno è sempre il leader e gli altri sono in standby.
+    \item \textbf{TaskManager}: sono i worker del \textit{Cluster}, si occupano di eseguire i task e di ricevere e inviare i dati.
+    La più piccola unità di esecuzione in un TaskManager è un \textit{task slot} \ref{subsubsec:flink_task_slots}.
+    Il numero di slot di task in un TaskManager indica il numero di task eseguibili in parallelo.
+    
+\end{itemize}
+
+\subsubsection{task slots}
+\label{subsubsec:flink_task_slots}
+
+
