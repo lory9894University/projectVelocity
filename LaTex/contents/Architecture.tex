@@ -29,9 +29,11 @@ I vari domini non sono isolati l'uno dall'alto, bensì la modifica di una entit�
 \\
 \\
 Lo scopo del sistema di \textbf{T\&T} è proprio quello di tenere traccia di tutti i cambiamenti subiti dalle varie entità (effettuati dal \textbf{TMS}).
+Ciò avviene tramite \texttt{Dbezium}\ref{sec:debezium_overview} che monitora i database del \textbf{TMS} generando eventi di dominio, che verranno poi processati da altri microservizi
 %nel video quello che io chiamo entità vengono chiamati "root aggregate", anzi ancora diverso. sono tutte entità, ma le entità "viaggio" o "ordine trasporto" sono dei Root Aggregate, cioè degli oggetti che si portano dietro molte altre informazioni.
-Il \textbf{T\&T} si occupa anche di fornire ai clienti informazioni sullo stato e sulla storia di diversi oggetti, composti dalle entità. Ad esempio potrebbe essere fornito l'oggetto \textit{Carico} che descrive lo spostamento di un mezzo e tutte le consegne effettuate, quindi costituito da \textit{Tratta e Fermate} ma anche dalle informazioni riguardo alle merci che trasporta, cioè \textit{Note,Unità di movimentazione, etc ...}
-\todo{magari citare Debezium, così si capisce come gli eventi vengono generati}
+Il \textbf{T\&T} si occupa anche di fornire ai clienti informazioni sullo stato e sulla storia di diversi oggetti, composti dalle entità.
+Ad esempio potrebbe essere fornito l'oggetto \textit{Carico} che descrive lo spostamento di un mezzo e tutte le consegne effettuate,
+quindi costituito da \textit{Tratta e Fermate} ma anche dalle informazioni riguardo alle merci che trasporta, cioè \textit{Note,Unità di movimentazione, etc ...}
 
 \section{Track and Trace legacy}
 \label{sec:T&T_old}
@@ -50,7 +52,10 @@ Possiamo distinguere 3 tipologie di \texttt{Kafka Topic}:
     \label{fig:kafka_topics.img}
 \end{figure}
 \begin{itemize}
-    \item \textbf{Technical Events}: Contengono gli eventi generati dal \textbf{TMS}, sono eventi molto simili a dei log di un database (\todo{di nuovo, magari citare Debezium }) e spesso sono ridondanti, è infatti comune che il sistema effettui operazioni poco efficienti. Ad esempio qualora io avessi un ordine con una nota e la volessi modificare il TMS potrebbe svolgere la richiesta segnalando una operazione di \texttt{DELETE} ed una di \texttt{INSERT} piuttosto che effettuare una semplice \texttt{UPDATE}.\\
+    \item \textbf{Technical Events}: Contengono gli eventi generati dal \textbf{TMS}, sono eventi molto simili a dei log di un database
+    (essendo generati tramite \texttt{Debezium} sono sostanzialmente una collezione di operazioni SQL) e spesso sono ridondanti, è
+    infatti comune che il sistema effettui operazioni poco efficienti.
+    Ad esempio qualora io avessi un ordine con una nota e la volessi modificare il TMS potrebbe svolgere la richiesta segnalando una operazione di \texttt{DELETE} ed una di \texttt{INSERT} piuttosto che effettuare una semplice \texttt{UPDATE}.\\
     É presente un \texttt{Topic} di tipo \textit{Technical Events} per ogni tabella del database originale (quindi un topic ogni dominio).
     \item \textbf{Domain Events}: Questi Topic contengono gli eventi filtrati dai \textit{Technical Events} tramite i \texttt{Kafka Streams}, non sono più simili a dei log di un DB (già solo la loro struttura è JSON, non SQL) e rappresentano come è fatto un oggetto (ordine di trasporto, viaggio, ...). 
     Tutti i potenziali eventi ridondanti sono stati filtrati dallo \textit{Stream}, non vi è più quindi il problema degli eventi ridondanti.
