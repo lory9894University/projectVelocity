@@ -47,7 +47,7 @@
 \usepackage{enumitem}
 % package per l'utilizzo dei colori
 % package per l'highlighting del codice
-%\usepackage{minted} %(non funziona sotto windows)
+\usepackage{minted} %(non funziona sotto windows)
 % package per gestire le caption 
 \usepackage{caption}
 \usepackage{subcaption}
@@ -97,13 +97,7 @@ sorting=ynt
 \xapptocmd{\endabstract}{\selectlanguage{italian}}{}{}
 
 % formattazione e highlight del codice
-%\usemintedstyle{manni}
-%\setminted[typescript]{
-%    framesep=2mm,
-%    baselinestretch=1.2,
-%    fontsize=\ttfamily\footnotesize,
-%    linenos
-%}
+\usemintedstyle{manni}
 
 % rimozione del prefix per le tabelle
 \captionsetup[table]{labelformat=empty}

@@ -117,8 +117,15 @@ In inglese si parla di \textit{count window}.}
 Semplici esempi di elaborazioni che richiedono uno stato sono: la ricerca di un pattern, il calcolo di una media (mobile se si parl di \textit{Stream Unbounded}), il calcolo di una somma, etc \dots
 \textit{Flink} sfrutta il lo stato anche per garantire la \textit{fault-tollerance}, cioè la capacità di ripristinare il sistema in caso di guasto.\\\\
 Il metodo più comune con cui una applicazione \textit{Flink} sfrutta lo \textit{Statefull processing} è tramite l'uso di \textit{Keyed Stream}.
-Operando su un \texttt{Datastream} può essere effettuata una operazione di \textit{keyBy} che permette di raggruppare gli eventi in base ad una chiave,
-in modo che tutti gli eventi con la stessa chiave appartengano alla stessa partizione logica 
+Operando su un \texttt{Datastream} può essere effettuata una operazione di \texttt{keyBy} che permette di raggruppare gli eventi in base ad una chiave,
+in modo che tutti gli eventi con la stessa chiave appartengano alla stessa partizione logica.
+Si ottiene quindi un \texttt{KeyedStream} su cui è possibile eseguire operazioni di \textit{statefull processing}, 
+il seguente codice di esempio mostra come calcolare la somma di un \texttt{KeyedStream} di ogetti composti da una chiave (\textit{f0}) e un valore(\textit{f1}):
+
+\begin{code}
+    \inputminted{java}{listings/keyed-stream.java}
+    \caption{Esempio di operazione statefull su un KeyedStream}
+\end{code}
 
 
 \subsection{Windowing}
