@@ -22,6 +22,14 @@ Un \textbf{Evento} è un record all'interno del sistema di qualcosa che si è ve
 \end{itemize}
 In ultimo \texttt{Kafka} è un sistema distribuito, è quindi possibile avere più istanze, dette \texttt{Kafka Brokers}, che collaborano in un \texttt{Kafka Cluster}. Grazie a questa caratteristica si possono implementare meccanismi di parallelizzazione, high-availability e ridondanza.
 In particolare su ogni \texttt{Broker} sono salvati uno o più \textit{Topic} ed i differenti endpoints (siano essi \textit{Consumers,Producers,Streams o Connectors}) vi dialogano per leggere o scrivere sui \textit{Topic}.
+Un \texttt{Cluster} di esempio è mostrato in figura \ref{fig:kafka_cluster}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/kafka/cluster.jpg}
+    \caption{Kafka Cluster}
+    \label{fig:kafka_cluster}
+\end{figure}
+% dovrei citare la fonte della figura https://www.scaler.com/topics/kafka-cluster/
 
 \subsection{Topic}
 \label{subsec:kafka_topics}
@@ -33,8 +41,14 @@ I \textit{Topic} sono partizionati, per permettere high-availability, fault-toll
 Infatti ogni \textit{Topic} è distribuito tra vari \textit{buckets}, che si trovano nei \texttt{Kafka Brokers}.
 Eventi aventi la stessa \textit{Key} sono scritti nella stessa partizione e \textit{Kafka} garantisce che qualsiasi \textit{Consumer} iscritto a tale partizione leggerà gli eventi nello stesso ordine in cui sono stati scritti.
 Come citato prima il partizionamento permette anche la scrittura in parallelo, infatti se la partizione su cui due \textit{Producer} scrivono è differente e possibile effettuare l'operazione senza doversi preoccupare dei problemi generati dalla scrittura concorrente, anche se il \textit{Topic} è il medesimo.
-
-
+Un esempio di partizionamento è mostrato in figura \ref{fig:kafka_topic}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/kafka/topic.png}
+    \caption{Partizionamento Kafka Topic}
+    \label{fig:kafka_topic}
+\end{figure}
+%https://docs.datastax.com/en/kafka/doc/kafka/kafkaHowMessages.html
 \subsection{Clients}
 \label{subsec:kakfa_clients}
 I \texttt{Consumers} ed i \texttt{Producers}, insieme ai \textit{Topics}, sono gli elementi alla base del funzionamento di \textit{Kafka}.
@@ -95,6 +109,16 @@ Per fare ciò bisogna ricorrere a delle operazioni di \textit{windowing}, cioè 
 \footnote{Per \textit{finestra di conteggio} si intende una finestra che contiene un numero fisso di elementi, ad esempio una finestra di 100 elementi.
 In inglese si parla di \textit{count window}.}
 ) e poi eseguire le operazioni su queste finestre.
+
+\subsection{Statefull processing}
+\label{subsec:flink_statefull_processing}
+\textit{Flink} può svolgere operazioni che richiedono il mantenimento di uno stato, cioè un insieme di informazioni riguardanti gli eventi passati.
+Semplici esempi di elaborazioni che richiedono uno stato sono: la ricerca di un pattern, il calcolo di una media (mobile se si parl di \textit{Stream Unbounded}), il calcolo di una somma, etc \dots
+\textit{Flink} sfrutta il lo stato anche per garantire la \textit{fault-tollerance}, cioè la capacità di ripristinare il sistema in caso di guasto.\\\\
+Il metodo più comune con cui una applicazione \textit{Flink} sfrutta lo \textit{Statefull processing} è tramite l'uso di \textit{Keyed Stream}.
+Operando su un \texttt{Datastream} può essere effettuata una operazione di \textit{keyBy} che permette di raggruppare gli eventi in base ad una chiave,
+in modo che tutti gli eventi con la stessa chiave appartengano alla stessa partizione logica 
+
 
 \subsection{Windowing}
 \label{subsec:flink_windowing}
