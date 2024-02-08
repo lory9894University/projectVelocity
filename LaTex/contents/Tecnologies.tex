@@ -140,6 +140,35 @@ Il discorso di come \textit{Flink} gestisca le risorse è approfondito nella sez
 
 \subsection{Windowing}
 \label{subsec:flink_windowing}
+Alcune elaborazioni richiedono di operare su un sottoinsieme di dati, soprattutto quando si tratta di flussi di dati \textit{Unbounded}.
+Ad esempio se si volesse calcolare la media di un flusso di dati, sarebbe necessario calcolare la media solo sui dati arrivati in uno specifico intervallo, 
+non è possibile calcolare la media su tutti i dati del flusso, dato che il flusso non ha un inizio o una fine.
+Il \textit{windowing} è una tecnica di elaborazione di flussi di dati che permette di dividere un flusso in finestre, su cui poi eseguire operazioni di aggregazione.
+Tornando all'esempio della media, si potrebbe dividere il flusso in finestre temporali di 1 minuto e poi calcolare la media su ciascuna finestra.\\\\
+
+Le finestre possono essere \textit{temporali} o \textit{di conteggio}, le prime sono divise in base al tempo, ad esempio una finestra di 1 minuto,
+le seconde in base al numero di elementi, ad esempio una finestra di 100 elementi.
+Rispettando questa distinzione si possono avere altri 3 tipi di finestre:
+\begin{itemize}
+    \item \textbf{Tumbling Window}: una finestra temporale o di conteggio che non si sovrappone ad altre finestre, ad esempio una finestra di 1 minuto.
+    \item \textbf{Sliding Window}: una finestra temporale che si sovrappone ad altre finestre, ad esempio una finestra di 1 minuto che si sposta di 30 secondi ad ogni nuovo evento.
+    \item \textbf{Session Window}: una finestra temporale che si basa su un intervallo di tempo inattivo, ad esempio una finestra di 1 minuto che si chiude quando non ci sono eventi per 5 secondi.
+    Come le sliding window anche le session window si possono sovrapporre.
+\end{itemize}
+Un esempio dei vari tipi di finestra è mostrato in figura \ref{fig:flink_window}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/flink/windows.png}
+    \caption{Tipi di finestra}
+    \label{fig:flink_window}
+\end{figure}
+%TODO: citare la fonte dell'immagine https://datafibers-community.github.io/blog/2019/10/05/2019-10-05-flink-windows-explained/
+%TODO: modificare l'mmagine con gimp ed eliminare la tumbliing Count window
+
+\subsubsection{Wartermarks}
+\label{subsubsec:flink_watermarks}
+Legato al concetto di finestra temporale è il concetto di \textit{Watermark}, un \textit{Watermark} è un marcatore temporale che indica il punto in cui non ci saranno più eventi precedenti.
 
 \subsection{Flink Cluster}
 \label{subsec:flink_cluster}
