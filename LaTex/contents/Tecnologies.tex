@@ -176,7 +176,12 @@ Per comprendere il concetto di \textit{Task Slot} è necessario comprendere come
 Un programma scritto tramite l'API di \texttt{Flink} non viene eseguito sequenzialmente, ma viene diviso in sottoprocessi che possono essere eseguiti in parallelo.
 Ad esempio un semplice programma che riceve dei dati, li filtra e li salva su un database potrebbe essere diviso in tre sottoprocessi: ricezione, filtro e scrittura.
 Questi tre sottoprocessi sono chiamati \textit{Task} e possono essere, parzialmente, eseguiti in parallelo.
-\todo{c'è anche il discorso del partitioning dei dati, quando ne scrivo la sezione aggiungo qui}
+Inoltre, come anticipato nella sezione \ref{subsec:flink_statefull_processing}, una operazione di \texttt{KeyBy()} suddivide uno stream in partizioni di dati
+indipedenti tra loro, quindi tutte le operazioni su questi dati possono essere eseguite in parallelo.
+Potenzialmente potremmo eseguire la computazione di questi dati ognuna in un \textit{Task} differente, avendo così un \textit{Task}per ogni partizione,
+cioè per ogni \textit{key} presente nello stream.
+Qualora non si abbia a disposizione sufficienti risorse computazionali per dedicare ad ogni partizione un \textit{Task} il \texttt{Flink runtime environment} 
+automaticamente aggregherà più partizioni in un cosiddetto \textbf{Key Group} che verrà trattato come una qualsiasi altra partizione.
 \\\\
 Ogni \texttt{TaskManage} è sostanzialmente un processo che esegue la JVM ed il codice, quindi può eseguire uno o più sottoprocessi in diversi \textit{threads}.
 Ogni \texttt{Task Slot} rappresenta un sottoinsieme di risorse computazionali di un \texttt{TaskManager}, ad esempio un \texttt{TaskManager}
