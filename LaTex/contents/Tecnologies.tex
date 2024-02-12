@@ -222,17 +222,17 @@ ma non è limitato a ciò, può essere eseguito anche in un ambiente \textit{sta
 Per comprendere il concetto di \textit{Task Slot} è necessario comprendere come viene gestito il \textit{parallelismo} in \texttt{Flink}.    
 Un programma scritto tramite l'API di \texttt{Flink} non viene eseguito sequenzialmente, ma viene diviso in sottoprocessi che possono essere eseguiti in parallelo.
 Ad esempio un semplice programma che riceve dei dati, li filtra e li salva su un database potrebbe essere diviso in tre sottoprocessi: ricezione, filtro e scrittura.
-Questi tre sottoprocessi sono chiamati \textit{Task} e possono essere, parzialmente, eseguiti in parallelo.
+Questi tre sottoprocessi sono chiamati \textit{Task} e possono essere, parzialmente, eseguiti in parallelo.\\
 Inoltre, come anticipato nella sezione \ref{subsec:flink_statefull_processing}, una operazione di \texttt{KeyBy()} suddivide uno stream in partizioni di dati
 indipedenti tra loro, quindi tutte le operazioni su questi dati possono essere eseguite in parallelo.
-Potenzialmente potremmo eseguire la computazione di questi dati ognuna in un \textit{Task} differente, avendo così un \textit{Task}per ogni partizione,
-cioè per ogni \textit{key} presente nello stream.
+Potenzialmente potremmo eseguire la computazione di questi dati dedicando un \textit{Task} ad ogni partizione, cioè per ogni \textit{key} presente nello stream,
+ottenendo così il massimo parallelismo possibile.
 Qualora non si abbia a disposizione sufficienti risorse computazionali per dedicare ad ogni partizione un \textit{Task} il \texttt{Flink runtime environment} 
 automaticamente aggregherà più partizioni in un cosiddetto \textbf{Key Group} che verrà trattato come una qualsiasi altra partizione.
 \\\\
-Ogni \texttt{TaskManage} è sostanzialmente un processo che esegue la JVM ed il codice, quindi può eseguire uno o più sottoprocessi in diversi \textit{threads}.
-Ogni \texttt{Task Slot} rappresenta un sottoinsieme di risorse computazionali di un \texttt{TaskManager}, ad esempio un \texttt{TaskManager}
-con 3 \texttt{Task Slot} dedicherà 1/3 delle sue risorse a ciascun \texttt{Task Slot}.
+Ogni \texttt{TaskManager} è sostanzialmente un processo che esegue la JVM ed il codice, quindi può eseguire uno o più sottoprocessi in diversi \textit{threads}.
+Ogni \texttt{Task Slot} rappresenta un sottoinsieme di risorse computazionali di un \texttt{TaskManager}.
+Ad esempio un \texttt{TaskManager} con 3 \texttt{Task Slot} dedicherà 1/3 delle sue risorse a ciascun \texttt{Task Slot}.
 Più \texttt{Task Slot} si hanno a disposizione, più \texttt{Task} si possono eseguire in parallelo, ma anche meno risorse si avranno a disposizione per ciascun \texttt{Task}.
 Inoltre se due \texttt{Task} operano sugli stessi dati è possibile effettuare \textit{slot sharing}, cioè permettere a due \texttt{Task} di condividere un \texttt{Task Slot}, limitando il parallelismo ma riducendo il consumo di memoria.
 Come si può vedere nell'immagine \ref{fig:flink_slots} dove i \texttt{Task} \textit{Source} e \textit{Map} condividono un \texttt{Task Slot}.
