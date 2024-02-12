@@ -174,8 +174,19 @@ quando è passato più tempo di quanto specificato ed è ora che la finestra si 
 I \textit{watermarks} vengono gestiti da \textit{Flink} come se fossero normali eventi, sono inseriti all'interno del flusso di eventi e contenfono un timestamp \textit{t}.
 quando il \textit{Watermark} con timestamp $t$ raggiunge l'operatore finestra l'assunzione implicita è che non ci dovrebbero più arrivare elementi con timestamp $t$ tali per cui $t' \leq t$.
 Cioè eventi verificatisi "prima" del tempo $t$ del \textit{watermark}.
-
-
+Questo strumento non sembra molto utile finchè si considerano flussi di dati ordinati ma diventa fondamentale se il flusso su cui stiamo operando presenta eventi
+non ordinati (rispetto al timestamp).
+Situazione che si verifica di frequente quando si considerano sistemi complessi e distribuiti dove non è garantito che gli eventi, che pur si verificano in ordine,
+giungano al sistema di elaborazione mantenendo l'ordine. Un esempio di flusso con eventi non ordinati ed il relativo uso dei \textit{watermarks} è mostrato nella figura \ref{fig:watermark}\\\\
+Nel caso di eventi fuori ordine si possono impostare le \textit{finestre} in modo che permettano un "ritardo" nell'arrivo di alcuni eventi anche dopo che il \textit{watermark} ha raggiunto la finestra.
+Gli eventi in ritardo sono formalmente definiti come gli eventi aventi $t' \leq t$ ma che giungono alla \textit{finestra} dopo l'arrivo del \textit{watermark} e possono essere gestiti in diversi modi.
+Tra i più comuni abbiamo la possibilità di reindirizzarli in un apposito flusso (\textit{side output}) oppure di rielaborare tutti i dati nella \textit{finestra} scartando la precendente computazione (\textit{firing})
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/flink/watermark_out_of_order.png}
+    \caption{Watermarks in out-of-order stream}
+    \label{fig:watermark}
+\end{figure}
 
 \subsection{Flink Cluster}
 \label{subsec:flink_cluster}
@@ -187,7 +198,7 @@ ma non è limitato a ciò, può essere eseguito anche in un ambiente \textit{sta
     \caption{Flink Cluster}
     \label{fig:flink_cluster}
 \end{figure}
-Il \textit{runtime environment} di Flink è composto da due tipi di processi: un JobManager e uno o più TaskManager.
+\\Il \textit{runtime environment} di Flink è composto da due tipi di processi: i JobManager ed i TaskManager.
 \begin{itemize}
     \item \textbf{JobManager}: è il master del \textit{Cluster}, si occupa di coordinare il lavoro dei \textit{TaskManager} decidendo quando eseguire un Task,
     gestire gli errori in fase di esecuzione ed effettuare checkpointing 
@@ -195,20 +206,20 @@ Il \textit{runtime environment} di Flink è composto da due tipi di processi: un
     per poterlo ripristinare in caso di guasto}.
     Le principali responsabilità del \textit{JobManager} sono due: la gestione delle risorse e la gestione dei job.
     \begin{enumerate}
-        \item \textbf{Gestione delle risorse}: il \textit{JobManager} gestisce i \textbf{Task Slots}\ref{subsubsec:flink_Task_slots} dei \textit{TaskManager}, cioè le risorse computazionali.
-        Se l'ambiente di esecuzione è distribuito (come ad esempio \textit{YARN} o \textit{Kubernetes}) il \textit{JobManager} avviare nuove istanze di \textit{TaskManager} in base alle necessità.
+        \item \textbf{Gestione delle risorse}: il \textit{JobManager} gestisce i \textbf{Task Slots} (sezione \ref{subsubsec:flink_Task_slots}) dei \textit{TaskManager}, cioè le risorse computazionali.
+        Se l'ambiente di esecuzione è distribuito (come ad esempio \textit{YARN} o \textit{Kubernetes}) il \textit{JobManager} può richiedere di avviare nuove istanze di \textit{TaskManager} in base alle necessità.
         \item \textbf{Gestione dei job}: il \textit{JobManager} si occupa di ricevere i job da eseguire, di distribuirli tra i \textit{TaskManager} e di monitorarne l'esecuzione.
         Inoltre fornisce una REST API ed una interfaccia web per monitorare lo stato del cluster e per ricevere nuovi jobs.
     \end{enumerate}
     C'è sempre almeno un \textit{JobManager}. Una configurazione \textit{Hig-Availability} potrebbe avere più \textit{JobManager}, di cui uno è sempre il leader e gli altri sono in standby.
     \item \textbf{TaskManager}: sono i worker del \textit{Cluster}, si occupano di eseguire i Task e di ricevere e inviare i dati.
-    La più piccola unità di esecuzione in un TaskManager è un \textit{Task Slot} \ref{subsubsec:flink_Task_slots}.
+    La più piccola unità di esecuzione in un TaskManager è un \textbf{Task Slots} (sezione \ref{subsubsec:flink_Task_slots}).
     Il numero di slot di Task in un TaskManager indica il numero di Task eseguibili in parallelo.
 \end{itemize}
 
 \subsubsection{Task Slots}
 \label{subsubsec:flink_Task_slots}
-Per comprendere il concetto di \textit{Task Slot} è necessario comprendere come viene gestito il\textit{parallelismo} in \texttt{Flink}.    
+Per comprendere il concetto di \textit{Task Slot} è necessario comprendere come viene gestito il \textit{parallelismo} in \texttt{Flink}.    
 Un programma scritto tramite l'API di \texttt{Flink} non viene eseguito sequenzialmente, ma viene diviso in sottoprocessi che possono essere eseguiti in parallelo.
 Ad esempio un semplice programma che riceve dei dati, li filtra e li salva su un database potrebbe essere diviso in tre sottoprocessi: ricezione, filtro e scrittura.
 Questi tre sottoprocessi sono chiamati \textit{Task} e possono essere, parzialmente, eseguiti in parallelo.
