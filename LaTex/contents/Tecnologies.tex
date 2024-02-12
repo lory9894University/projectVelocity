@@ -50,6 +50,7 @@ Un esempio di partizionamento è mostrato in figura \ref{fig:kafka_topic}
 \end{figure}
 %https://docs.datastax.com/en/kafka/doc/kafka/kafkaHowMessages.html
 
+\newpage
 \subsection{Clients}
 \label{subsec:kakfa_clients}
 I \texttt{Consumers} ed i \texttt{Producers}, insieme ai \textit{Topics}, sono gli elementi alla base del funzionamento di \textit{Kafka}.
@@ -81,6 +82,7 @@ Similmente ai \textit{Kafka Streams} \ref{subsec:kafka_streams} i principali van
 Inoltre sono presenti diversi repository online dove trovare \texttt{Connector} già pronti, sviluppati dalla community o dagli sviluppatori delle applicazioni esterne (sqlserver, JDBC, Amazon S3),
 uno dei più diffusi è il \texttt{confluent-hub} https://www.confluent.io/product/connectors/ \todo{questo deve diventare un link o essere spostato in bibliografia}
 
+\newpage
 \section{Debezium}
 \label{sec:debezium_overview}
 \textit{Debezium is an open source distributed platform for change data capture. Start it up, point it at your databases, and your apps can start responding to all of the inserts, updates, and deletes that other apps commit to your databases.}\cite*{debeziumwebsite}\\\\
@@ -92,10 +94,10 @@ Il primo modo presenta tutti i vantaggi di un sistema distribuito, come la scala
 È inoltre possibile consumare gli eventi prodotti tramite un qualsiasi sistema esterno, senza dover necessariamente utilizzare \textit{Kafka}.
 Se invece si ha già una infrastruttura già basata su \textit{Kafka} è molto più conveniente utilizzare \texttt{Debezium} come \texttt{Connector}, con un considerevole risparmio di risorse e di tempo.  
 
+\newpage
 \section{Apache Flink}
 \label{sec:flink_overview}
 \textit{Apache Flink is a framework and distributed processing engine for stateful computations over unbounded and bounded data streams. Flink has been designed to run in all common cluster environments, perform computations at in-memory speed and at any scale.}\cite*{flinkwebsite}\\\\
-
 \textit{Apache Flink} è sia un framework che un motore di elaborazione distribuito per la computazione di flussi di dati, \textit{bounded} e \textit{unbounded}.
 Può essere utilizzato per elaborare dati in tempo reale, ma anche per elaborare grandi quantità di dati in batch.
 Fornisce sia una API per la creazione di applicazioni di elaborazione di dati, sia un \textit{runtime} environment distribuito per eseguirle,
@@ -145,7 +147,6 @@ Ad esempio se si volesse calcolare la media di un flusso di dati, sarebbe necess
 non è possibile calcolare la media su tutti i dati del flusso, dato che il flusso non ha un inizio o una fine.
 Il \textit{windowing} è una tecnica di elaborazione di flussi di dati che permette di dividere un flusso in finestre, su cui poi eseguire operazioni di aggregazione.
 Tornando all'esempio della media, si potrebbe dividere il flusso in finestre temporali di 1 minuto e poi calcolare la media su ciascuna finestra.\\\\
-
 Le finestre possono essere \textit{temporali} o \textit{di conteggio}, le prime sono divise in base al tempo, ad esempio una finestra di 1 minuto,
 le seconde in base al numero di elementi, ad esempio una finestra di 100 elementi.
 Rispettando questa distinzione si possono avere altri 3 tipi di finestre:
@@ -164,11 +165,17 @@ Un esempio dei vari tipi di finestra è mostrato in figura \ref{fig:flink_window
     \label{fig:flink_window}
 \end{figure}
 %TODO: citare la fonte dell'immagine https://datafibers-community.github.io/blog/2019/10/05/2019-10-05-flink-windows-explained/
-%TODO: modificare l'mmagine con gimp ed eliminare la tumbliing Count window
 
 \subsubsection{Wartermarks}
 \label{subsubsec:flink_watermarks}
 Legato al concetto di finestra temporale è il concetto di \textit{Watermark}, un \textit{Watermark} è un marcatore temporale che indica il punto in cui non ci saranno più eventi precedenti.
+Nascono dalla necessità di misurare il tempo quando si lavora con \textit{finestre temporali} dato che l'operatore \textit{finestra} ha bisogno di essere notificato
+quando è passato più tempo di quanto specificato ed è ora che la finestra si chiuda (non accetti più eventi) ed inizi la computazione.\\\\
+I \textit{watermarks} vengono gestiti da \textit{Flink} come se fossero normali eventi, sono inseriti all'interno del flusso di eventi e contenfono un timestamp \textit{t}.
+quando il \textit{Watermark} con timestamp $t$ raggiunge l'operatore finestra l'assunzione implicita è che non ci dovrebbero più arrivare elementi con timestamp $t$ tali per cui $t' \leq t$.
+Cioè eventi verificatisi "prima" del tempo $t$ del \textit{watermark}.
+
+
 
 \subsection{Flink Cluster}
 \label{subsec:flink_cluster}
