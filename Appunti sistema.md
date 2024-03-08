@@ -101,4 +101,4 @@ Vogliamo passare da un *TransactionEvent* ad un *Domain Event*. Classe di riferi
 Sperimentare Apache Flink per capire se è possibile effettuare il passaggio da Spring Batch a Flink.
 
 # Step 3 (Microservizio Export Event Consumer riscritto con flink)
-aggiungere alla tesi Hibernate e Caffeine (non andare nel dettaglio, soprattutto riguardo al secondo)
+aggiungere alla tesi Hibernate, Avro e Caffeine (non andare nel dettaglio, soprattutto riguardo al secondo)
