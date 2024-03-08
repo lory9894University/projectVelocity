@@ -102,3 +102,8 @@ Sperimentare Apache Flink per capire se è possibile effettuare il passaggio da 
 
 # Step 3 (Microservizio Export Event Consumer riscritto con flink)
 aggiungere alla tesi Hibernate, Avro e Caffeine (non andare nel dettaglio, soprattutto riguardo al secondo)
+scopo del microservizio:
+•	Step 1: Consumere il Signaling Topic applicando un filtro basato su una tabella di configurazione che definirà il trigger per invio a alla piattaforma EDI dell’evento
+•	Step 2: controllare se l’evento deve essere inviato, non inviare eventi già inviati a meno di modifiche su campi significati
+•	Step 3: in base alla configurazione creare XML con i dati richiesti dal cliente, saranno definiti dei template per compilare le varie sezioni informative in base a una configurazione
+•	Step 4: inviare a Sterling tramite API di prodotto gli XML prodotti
