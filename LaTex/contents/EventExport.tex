@@ -4,5 +4,17 @@
 \section{Panoramica del microservizio}
 \label{sec:ScopoDelMicroservizio}
 Lo scopo del microservizio \textit{EventExport} è quello di elaborare dei \textbf{Business Event}, che arrivano dal microservizio \textit{EventEngine} 
-(sezione \ref{subsubsec:event_engine}).
-%TODO: aggiungere l'immagine della documentazione
+(sezione \ref{subsubsec:event_engine}) e di comunicarli al cliente.\\\\
+
+\textbf{EventExport} è configurabile in maniera differente per ogni cliente, di modo che ad un cliente vengano inviati solo alcuni tipi di eventi.
+Ad esempio, un cliente potrebbe essere interessato solo agli eventi di creazione di un ordine, mentre un altro potrebbe voler ricevere tutti gli aggiornamenti
+riguardo alla posizione dell'ordine da lui effettuato.
+Questa configurazione è gestita tramite una tabella \textit{LogicDeterminationEvent} che contiene le regole di filtro per ogni cliente.
+%TODO: aggiungere immagine della tabella LogicDeterminationEvent (prendila dalla documentazione o da DBeaver)
+
+%TODO: aggiungere l'immagine della documentazione, quella dove si vede in che posto si colloca EventExport rispetto agli altri microservizi (? la metto ?)
+
+Step 1: Consumere il \textit{Signaling Topic} (topic Kafka) applicando un filtro basato su una tabella di configurazione.
+Step 2: controllare se l’evento deve essere inviato, non inviare eventi già inviati a meno di modifiche su campi significati
+Step 3: in base alla configurazione creare XML con i dati richiesti dal cliente, saranno definiti dei template per compilare le varie sezioni informative in base a una configurazione
+Step 4: inviare a Sterling tramite API di prodotto gli XML prodotti
