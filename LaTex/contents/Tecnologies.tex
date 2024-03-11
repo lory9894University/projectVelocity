@@ -245,6 +245,23 @@ Come si può vedere nell'immagine \ref{fig:flink_slots} dove i \texttt{Task} \te
 
 \subsection{Apache Avro}
 \label{subsec:avro_overview}
+\texttt{Apache Avro} è un sistema di serializzazione di dati, simile a \texttt{JSON} o \texttt{XML}, ma con un formato binario.
+La sua caratteristica principale è la possibilità di definire uno \textit{schema} per i dati, che viene poi utilizzato per la serializzazione e deserializzazione.
+Questo \textit{schema} può accompagnare i dati serializzati, permettendo al sistema una ricostruzione dei dati dinamica anche senza conoscere a priori il tipo di dato,
+oppure può essere salvato in un file separato e condiviso tra i vari sistemi che devono scambiarsi i dati.\\\\
+
+Un oggetto \texttt{Avro} è quindi composto da due parti: 
+\begin{itemize}
+    \item Un header dove si possono trovare diversi metadati e lo \textit{schema}, definito in JSON.
+    \item Un body, che contiene i dati serializzati.
+    Questi possono essere codificati in maniera efficiente tramite una rappresentazione binaria oppure in maniera leggibile tramite JSON.
+\end{itemize}
+La presenza o meno dello \textit{schema} all'interno dell header dipende da come si decide di utilizzare \texttt{Avro}.
+Se ad esempio ci fosse la necessità di scrivere un file \texttt{Avro} su disco, sarebbe molto conveniente includere lo \textit{schema} al suo interno,
+in modo che chiunque lo legga possa ricostruire i dati.\\
+Se invece si usa \textit{Avro} in RPC (\textit{Remote Procedure Call}) non conviene includere lo \textit{schema} in ogni messaggio,
+dato che sarebbe ridondante e aumenterebbe inutilmente la dimensione dei messaggi.
+In questo caso il client ed il server si scambierebbero lo \textit{schema} una sola volta, durante la fase di handshake.
 
 \subsection{Hybernate}
 \label{subsec:hibernate_overview}
