@@ -8,7 +8,7 @@ Lo scopo del microservizio \textit{EventExport} è quello di elaborare dei \text
 \textbf{EventExport} è configurabile in maniera differente per ogni cliente, di modo che ad un cliente vengano inviati solo alcuni tipi di eventi.
 Ad esempio, un cliente potrebbe essere interessato solo agli eventi di creazione di un ordine, mentre un altro potrebbe voler ricevere tutti gli aggiornamenti
 riguardo alla posizione dell'ordine da lui effettuato.
-Questa configurazione è gestita tramite una tabella \textit{LogicDeterminationEvent} che contiene le regole di filtro per ogni cliente.
+Questa configurazione è gestita tramite una tabella \textit{TradingPartnerEventLookup} che contiene le regole di filtro per ogni cliente.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{images/EventExport/EventExport_architecture.png}
@@ -52,12 +52,42 @@ In un caso (\textit{Kafka}) è riferita al \textit{Broker Kafka} e nell'altro al
 
 \section{Lettura della tabella di configurazione}
 \label{sec:LetturaDellaTabellaDiConfigurazione}
-La tabella di configurazione è una tabella \textit{SQL} chiamata \textit{LogicDeterminationEvent} e contiene le regole di filtro per ogni cliente.
+La tabella di configurazione è una tabella \textit{SQL} chiamata \textit{TradingPartnerEventLookup} e contiene le regole di filtro per ogni cliente.
 La connessione al database è gestita tramite \textit{JPA} e la libreria \textit{Hibernate} (sezione \ref{subsec:hibernate_overview}) con un sistema di caching
 per evitare richieste ripetute al database. La cache viene aggiornata ogni ora.
-\begin{figure}[htbp]
+\begin{table}[!ht]
     \centering
-    \includegraphics[width=\textwidth]{images/EventExport/LogicDeterminationEvent.png}
-    \caption{Tabella \textit{LogicDeterminationEvent}}
-    \label{fig:LogicDeterminationEvent}
-\end{figure}
+    \resizebox{\columnwidth}{!}{%
+    \begin{tabular}{|l|l|l|l|l|l|l|l|}
+    \hline
+        Id & TradingPartner & OT & ERP & ID & Depot & Active & QueryCondition \\ \hline
+        1 & TEST\_1 & 5 & 08 & null & null & Y & null \\ \hline
+        2 & TEST\_1 & 5 & 20 & null & null & Y & null \\ \hline
+        3 & TEST\_1 & 5 & 21 & null & null & Y & null \\ \hline
+        4 & TEST\_1 & 5 & GEO & null & null & Y & null \\ \hline
+        5 & TEST\_2 & 1 & COR & null & null & Y & null \\ \hline
+        6 & TEST\_2 & 1 & GEN & null & null & Y & null \\ \hline
+        7 & TEST\_3 & 5 & 10 & null & null & Y & null \\ \hline
+        8 & TEST\_4 & 1 & COR & null & null & Y & null \\ \hline
+        9 & TEST\_4 & 1 & VIC & null & null & Y & null \\ \hline
+        10 & TEST\_4 & 1 & VSC & null & null & Y & null \\ \hline
+        11 & TEST\_5 & 1 & CMG & null & null & Y & null \\ \hline
+        12 & TEST\_5 & 1 & CMO & null & null & Y & null \\ \hline
+        13 & TEST\_5 & 1 & CMR & null & null & Y & null \\ \hline
+        14 & TEST\_5 & 1 & COR & null & null & Y & null \\ \hline
+        15 & TEST\_5 & 1 & ERR & null & null & Y & null \\ \hline
+        16 & TEST\_5 & 1 & GIA & null & null & Y & null \\ \hline
+        17 & TEST\_5 & 1 & OAC & null & null & Y & null \\ \hline
+        18 & TEST\_5 & 1 & STC & null & null & Y & null \\ \hline
+    \end{tabular}%
+    }
+    \caption{Tabella TradingPartnerEventLookup di esempio}
+    \label{tab:TradingPartnerEventLookup}
+\end{table}
+La tabella \ref{tab:TradingPartnerEventLookup} è un esempio di come potrebbe essere configurato il microservizio per inviare eventi a diversi clienti, I campi più rilevanti sono:
+\begin{itemize}
+    \item \textbf{TradingPartner}: il nome del cliente, in questo caso sono tutti clienti fittizi di test.
+    \item \textbf{OT}: \textit{BusinessObjectType} il tipo di evento (1 Spedizione – 2 Ritiro – 5 Ordini).
+    \item \textbf{ERP}: Lo specifico evento, ad esempio \textit{08} è l'evento di creazione di un ordine, \textit{GEO} è l'evento di modifica della posizione di un ordine.
+    \item \textbf{Active}: se il filtro è attivo.
+\end{itemize}
