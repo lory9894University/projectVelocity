@@ -91,3 +91,23 @@ La tabella \ref{tab:TradingPartnerEventLookup} è un esempio di come potrebbe es
     \item \textbf{ERP}: Lo specifico evento, ad esempio \textit{08} è l'evento di creazione di un ordine, \textit{GEO} è l'evento di modifica della posizione di un ordine.
     \item \textbf{Active}: se il filtro è attivo.
 \end{itemize}
+
+\textit{Flink} è basato sulla computazione distribuita di stream di dati (vedasi sezione \ref{sec:flink_overview}),
+ciò va tenuto durante la creazione della cache per la tabella di configurazione. 
+Infatti implementando una semplice cache locale (attraverso una \texttt{HashMap} ad esempio), si potrebbero avere problemi di consistenza dei dati e di sincronizzazione tra i vari nodi.
+Inoltre tale implementazione non sfrutta le potenzialità di \textit{Flink} e la sua gestione automatica della scalabilità.
+Per mostrare le problematiche di una cache implementata in maniera non corretta, si consideri il seguente esempio:\\
+All'interno di un \textit{job}  viene creato un metodo che legge la tabella di configurazione e la memorizza in una \texttt{HashMap}, ogni 10 minuti la cache viene aggiornata.
+Automaticamente il \textit{job} viene scalato su più nodi da \textit{Flink}, ogni nodo avrà la sua copia della cache e tale cache verrà aggiornata in maniera indipendente.
+Questo comporta prima di tutto un problema di consistenza dei dati, in quanto un nodo potrebbe avere una copia della cache diversa 
+qualora fosse impegnato in una computazione al momento dell'aggiornamento.
+Ma soprattutto ogni nodo effettua una query al database in fase di aggiornamento, causando una serie di richieste tutti identiche e quindi ridondanti.
+Se ad esempio il \textit{job} viene scalato su 10 nodi, ci saranno 10 richieste al database ad ogni aggiornamento, quando invece ne basterebbe una sola.\\\\
+Il modo corretto di gestire questa cache è di utilizzare un datastream che legga la tabella di configurazione e la mantenga aggiornata, in collaborazione con il pattern 
+\textbf{Broadcast State} per la distribuzione della cache tra i vari nodi.
+
+\subsection{Broadcast State}
+\label{subsec:BroadcastState}
+Il \textit{Broadcast State} è un pattern di \textit{Flink} che permette di distribuire uno stato tra tutti i nodi di un job.
+Questo stato è distribuito in maniera efficiente e scalabile, inoltre è possibile aggiornarlo in maniera asincrona.
+Infatti quando un nuovo aggioranmento dello stato viene inviato, \textit{Flink} si occupa di distribuirlo in maniera efficiente e di aggiornare lo stato su tutti i nodi.
