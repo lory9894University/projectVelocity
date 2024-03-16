@@ -104,10 +104,21 @@ qualora fosse impegnato in una computazione al momento dell'aggiornamento.
 Ma soprattutto ogni nodo effettua una query al database in fase di aggiornamento, causando una serie di richieste tutti identiche e quindi ridondanti.
 Se ad esempio il \textit{job} viene scalato su 10 nodi, ci saranno 10 richieste al database ad ogni aggiornamento, quando invece ne basterebbe una sola.\\\\
 Il modo corretto di gestire questa cache è di utilizzare un datastream che legga la tabella di configurazione e la mantenga aggiornata, in collaborazione con il pattern 
-\textbf{Broadcast State} per la distribuzione della cache tra i vari nodi.
+\textbf{Broadcast State Pattern} per la distribuzione della cache tra i vari nodi.
 
-\subsection{Broadcast State}
-\label{subsec:BroadcastState}
-Il \textit{Broadcast State} è un pattern di \textit{Flink} che permette di distribuire uno stato tra tutti i nodi di un job.
+\subsection{Rules Based Stream Processing}
+\label{subsec:RulesBasedStreamProcessing}
+Il \textit{Broadcast State Pattern} è un pattern di \textit{Flink} che permette di distribuire uno stato tra tutti i nodi di un job.
 Questo stato è distribuito in maniera efficiente e scalabile, inoltre è possibile aggiornarlo in maniera asincrona.
-Infatti quando un nuovo aggioranmento dello stato viene inviato, \textit{Flink} si occupa di distribuirlo in maniera efficiente e di aggiornare lo stato su tutti i nodi.
+Il \textit{Broadcast State Pattern} è fondamentale per la creazione di un sistema di \textit{Rules Based Stream Processing}, 
+cioè un sistema che applica delle regole ad un flusso di dati.\\
+Ci sono quindi due flussi di dati, uno contenente le regole e l'altro i dati a cui applicare le regole.
+Tramite il \textit{Broadcast State Pattern} è possibile distribuire le regole a tutti i nodi del job, in modo che ogni nodo abbia una copia delle regole.
+
+Quando una nuova regola arriva dalla sorgente del flusso di regole, questa viene distribuita a tutti i nodi che andranno ad aggiornare il loro \textit{Broadcast State}
+con la nuova regola. In questo modo ogni nodo ha sempre una copia aggiornata delle regole da poter confrontare con i dati in arrivo sul flusso principale.
+
+\subsection{Implementazione del Rules Based Stream Processing}
+\label{subsec:ImplementazioneDelRulesBasedStreamProcessing}
+Come descritto in precedenza (sezione \ref{subsec:RulesBasedStreamProcessing}), il Rules Based Stream Processing è un sistema che applica delle regole ad un flusso di dati.
+In questo caso le regole sono quelle contenute nella tabella \textit{TradingPartnerEventLookup} e il flusso di dati è quello dei \textit{Business Event} provenienti dal \textit{Signaling Topic}.
