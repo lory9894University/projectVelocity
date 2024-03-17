@@ -113,10 +113,42 @@ Questo stato è distribuito in maniera efficiente e scalabile, inoltre è possib
 Il \textit{Broadcast State Pattern} è fondamentale per la creazione di un sistema di \textit{Rules Based Stream Processing}, 
 cioè un sistema che applica delle regole ad un flusso di dati.\\
 Ci sono quindi due flussi di dati, uno contenente le regole e l'altro i dati a cui applicare le regole.
-Tramite il \textit{Broadcast State Pattern} è possibile distribuire le regole a tutti i nodi del job, in modo che ogni nodo abbia una copia delle regole.
-
+Ogni nodo mantiene un \textit{Broadcast State}, cioè una mappa che viene aggiornata all'arrivo di nuove regole.
 Quando una nuova regola arriva dalla sorgente del flusso di regole, questa viene distribuita a tutti i nodi che andranno ad aggiornare il loro \textit{Broadcast State}
-con la nuova regola. In questo modo ogni nodo ha sempre una copia aggiornata delle regole da poter confrontare con i dati in arrivo sul flusso principale.
+con la nuova regola, secondo quanto definito nel codice. In questo modo ogni nodo ha sempre una copia aggiornata delle regole da poter confrontare con i dati in arrivo sul flusso principale.
+Quando invece un dato arriva sul flusso principale questi viene direttamente analizzato dal nodo che, eventualmente avvalendosi del \textit{Broadcast State}, lo elabora 
+secondo quanto definito dalla logica implementativa.\\\\
+Ad esempio (\todo{esempio preso dala documentazione di FLink, citarlo}), se una compagnia volesse analizzare le abitudini di acquisto su un e-commerce dei loro clienti 
+potrebbe avvalersi di un \textit{Rules Based Stream Processing}. Quindi si avrebbero due stream, uno contenente tutte le operazioni svolte da un utente,
+l'altro contenente il pattern che vogliamo analizzare, come mostrato in figura \ref{fig:broadcastState1}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/EventExport/broadcastState1.png}
+    \caption{Stream di dati e stream di regole}
+    \label{fig:broadcastState1}
+\end{figure}
+Appena arriva una nuova regola, questa viene distribuita a tutti i nodi, che aggiorneranno i loro \textit{Broadcast State}.
+Nel caso in figura \ref{fig:broadcastState2} ad esempio, il pattern appena giunto è l'operazione di ingresso al sito seguita da un'uscita, senza acquisti.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/EventExport/broadcastState2.png}
+    \caption{Aggiornamento del \textit{Broadcast State}}
+    \label{fig:broadcastState2}
+\end{figure}
+Successivamente, quando arriva un nuovo dato, questo viene analizzato dal nodo che, avvalendosi del \textit{Broadcast State}, lo elabora secondo quanto definito dalla regola.
+Ad esempio nella sezione sinistra della figura \ref{fig:broadcastState3/4}, si può notare che viene ricevuto il seguente dato \textit{il cliente 1001 entra nel sito}.
+Nel frattempo gli altri due clienti effettuano altre operazioni che vengono inviate ai relaviti nodi.
+Successivamente arriva un altro dato \textit{il cliente 1001 esce dal sito} (parte destra della figura), che viene inviato al primo nodo.
+Questo nodo, avendo memoria della regola impostata nel \textit{Broadcast State}, riconosce il pattern e lo invia al sistema di analisi.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/EventExport/broadcastState3.png}
+    \includegraphics[width=0.49\textwidth]{images/EventExport/broadcastState4.png}
+    \caption{Esempio di pattern riconosciuto}
+    \label{fig:broadcastState3/4}
+\end{figure}
+
+
 
 \subsection{Implementazione del Rules Based Stream Processing}
 \label{subsec:ImplementazioneDelRulesBasedStreamProcessing}
