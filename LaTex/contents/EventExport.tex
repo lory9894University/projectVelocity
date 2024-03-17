@@ -148,9 +148,23 @@ Questo nodo, avendo memoria della regola impostata nel \textit{Broadcast State},
     \label{fig:broadcastState3/4}
 \end{figure}
 
-
-
 \subsection{Implementazione del Rules Based Stream Processing}
 \label{subsec:ImplementazioneDelRulesBasedStreamProcessing}
 Come descritto in precedenza (sezione \ref{subsec:RulesBasedStreamProcessing}), il Rules Based Stream Processing è un sistema che applica delle regole ad un flusso di dati.
-In questo caso le regole sono quelle contenute nella tabella \textit{TradingPartnerEventLookup} e il flusso di dati è quello dei \textit{Business Event} provenienti dal \textit{Signaling Topic}.
+In questo caso le regole sono le letture della tabella \textit{TradingPartnerEventLookup} e il flusso di dati è quello dei \textit{Business Event} provenienti dal \textit{Signaling Topic}
+\begin{code}
+    \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/TradingPartnerBroadcast.java}
+    \caption{creazione del Broadcast Stream}
+    \label{lst:EventExportRulesBasedStreamProcessing}
+\end{code}
+La prima operazione, mostrata nel codice \ref{lst:EventExportRulesBasedStreamProcessing}, è la creazione del \texttt{Broadcast Stream} partendo dallo stream \texttt{TradingPartnerEventLookupStream}.
+Tale stream è un \textit{DataStream} che legge la tabella \textit{TradingPartnerEventLookup} ogni ora e ne mantiene una copia aggiornata. 
+Ogni evento presente in tale stream corrisponde ad una intera copia della tabella, infatti il tipo di dato che lo compone è \texttt{List<TradingPartnerEventLookup>}, 
+cioè una lista di regole (ogni regola corrisponde ad una riga della tabella \textit{TradingPartnerEventLookup}).\\\\
+Ottenuto il \texttt{Broadcast Stream} si può procedere con il collegamento al flusso principale, cioè quello dei \textit{Business Event},
+di cui è già stata trattata la creazione nella sezione \ref{sec:LetturaDelSignalingTopic}. 
+\begin{code}
+    \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/StreamConnection.java}
+    \caption{collegamento del \textit{Broadcast Stream} allo stream di dati}
+    \label{lst:StreamsConnection}
+\end{code}
