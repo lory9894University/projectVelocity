@@ -49,6 +49,9 @@ e le properties contenenti credenziali per accedere allo \textit{Schema Registry
 La configurazione del \textit{Kafka Consumer} e del deserializzatore \textit{Avro} è definita in un file \textit{.properties} e principalmente contiene
 l'url dell'endpoint, le credenziali e diversi parametri per la connessione.
 In un caso (\textit{Kafka}) è riferita al \textit{Broker Kafka} e nell'altro allo \textit{Schema Registry} (\textit{Avro}).
+\subsection{Struttura del dato}
+\label{subsec:StrutturaDelDato}
+\todo{parlare di cosa arriva dal topic. quantomeno del fatto che un recrod contiene l'altra lista di record}
 
 \section{Lettura della tabella di configurazione}
 \label{sec:LetturaDellaTabellaDiConfigurazione}
@@ -167,4 +170,18 @@ di cui è già stata trattata la creazione nella sezione \ref{sec:LetturaDelSign
     \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/StreamConnection.java}
     \caption{collegamento del \textit{Broadcast Stream} allo stream di dati}
     \label{lst:StreamsConnection}
+\end{code}
+Come prima operazione c'è una fase di filtro dei record \texttt{SignalingTopicRecord} che non hanno \texttt{SignalingEvent} (cioè non hanno ricevuto aggiornamenti, 
+oppure sono appena stati creati e non ancora popolati), questo perchè non è necessario processare eventi che non hanno dati.
+Poi si procede con una operazione di mappatura, per comodità di elaborazione, in cui si genera un \texttt{Tuple2} contenente il \texttt{SignalingTopicRecord}
+ed un \texttt{SignalingEvent}, questo per ognuno dei \texttt{SignalingEvent} ad esso associati.
+Dopo un ultima fase di filto, atta ad eliminare le tuple che indicano operazioni di cancellazione (riga 12), si procede con la connessione al \textit{Broadcast Stream}
+tramite il metodo \texttt{connect} (riga 13).
+Infine si applica il \textit{Broadcast State pattern}, operazione effettuata dal metodo \texttt{process} (riga 14).\\\\
+La classe \texttt{TradingPartnerRuleEvaluator} è una classe che estende la classe \texttt{BroadcastProcessFunction} ed è la classe che si occupa di applicare il \textit{Broadcast State pattern}.
+La sua implementazione è mostrata nel codice \ref{lst:TradingPartnerRuleEvaluator}.
+\begin{code}
+    \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/TradingPartnerRuleEvaluator.java}
+    \caption{Implementazione della classe \texttt{TradingPartnerRuleEvaluator}}
+    \label{lst:TradingPartnerRuleEvaluator}
 \end{code}
