@@ -51,7 +51,21 @@ l'url dell'endpoint, le credenziali e diversi parametri per la connessione.
 In un caso (\textit{Kafka}) è riferita al \textit{Broker Kafka} e nell'altro allo \textit{Schema Registry} (\textit{Avro}).
 \subsection{Struttura del dato}
 \label{subsec:StrutturaDelDato}
-\todo{parlare di cosa arriva dal topic. quantomeno del fatto che un recrod contiene l'altra lista di record}
+Il dato letto dal \textit{Signaling Topic} è un \textit{Business Event} che contiene una serie di campi. 
+La maggior parte di questi non è rilevante per il microservizio \textit{EventExport}, ma alcuni sono fondamentali per la comprensione del suo funzionamento.
+\begin{itemize}
+    \item DomainKey: chiave di dominio, identifica un dato specificando il sistema che l'ha generato, il cliente a cui fa riferimento e l'identificativo del dato. non è univoca.
+    \item BusinessObjectType: tipo di oggetto, può essere 1 - spedizione, 2 - ritiro, 3 - viaggio, 4 - disposizione o 5 - ordine.
+    \item TradingPartner: cliente a cui fa riferimento il dato.
+    \item Action: azione svolta sul dato, può essere Create, Update, Delete.
+    \item SignalingEvent: Lista di eventi relativi a quel dato.
+\end{itemize}
+Ogni \textit{Business Event} contiene una lista di \textit{Signaling Event}, ognuno dei quali rappresenta un cambiamento di stato del dato. I campi più rilevanti di un \textit{Signaling Event} sono:
+\begin{itemize}
+    \item EventCode: Codice ERP dell'evento, identifica una categoria di eventi (STC, DCI, STD) \todo{esattamente cosa vogliano dire questi codici non lo so, informarsi} .
+    \item OperationType: Tipo di operazione, può essere c - Creazione, u - Modifica,udd - Cancellazione.
+    \item EventUser: utente che ha generato l'evento.
+\end{itemize}
 
 \section{Lettura della tabella di configurazione}
 \label{sec:LetturaDellaTabellaDiConfigurazione}
@@ -191,7 +205,7 @@ Le due funzioni, \texttt{processElement} e \texttt{processBroadcastElement}, son
     Quando arriva un nuovo \textit{Broadcast Element} (cioè una nuova lista di regole) questa funzione aggiorna il \textit{Broadcast State} con le nuove regole.
     Per prima cosa recupera il \textit{Broadcast State} tramite il suo \texttt{Descriptor} (riga 42) e poi scorre la lista di regole generando una \texttt{Map} (riga 44).
     Questa \texttt{Map} è la rappresentazione delle regole in un formato più efficiente, in cui il valore è la regola stessa e la chiave è una stringa che identifica univocamente la regola
-    (\textit{TradingPartner + OT + ERP}).
+    (\textit{TradingPartner + BusinessObjectType + ERPCode}).
     \item \texttt{processElement} (riga 17) è la funzione che processa i dati del flusso principale, cioè i \textit{Business Event}.
     Quando un nuovo elemento arriva questa funzione per prima cosa ricalcola la chiave con cui andare a cercare le regole nel \textit{Broadcast State} (riga 20).
     Poi controlla se la chiave è presente nel \textit{Broadcast State} (riga 24), se non è presente viene segnalato l'errore tramite log4j, altrimenti si procede con l'elaborazione.
