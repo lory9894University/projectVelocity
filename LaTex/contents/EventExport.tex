@@ -64,7 +64,7 @@ Ogni \textit{Business Event} contiene una lista di \textit{Signaling Event}, ogn
 \begin{itemize}
     \item EventCode: Codice ERP dell'evento, identifica una categoria di eventi (STC, DCI, STD) \todo{esattamente cosa vogliano dire questi codici non lo so, informarsi} .
     \item OperationType: Tipo di operazione, può essere c - Creazione, u - Modifica,udd - Cancellazione.
-    \item EventUser: utente che ha generato l'evento.
+    \item EventUser: utente che ha generato l'evento. 
 \end{itemize}
 
 \section{Lettura della tabella di configurazione}
@@ -138,7 +138,7 @@ secondo quanto definito dalla logica implementativa.\\\\
 Ad esempio (\todo{esempio preso dala documentazione di FLink, citarlo}), se una compagnia volesse analizzare le abitudini di acquisto su un e-commerce dei loro clienti 
 potrebbe avvalersi di un \textit{Rules Based Stream Processing}. Quindi si avrebbero due stream, uno contenente tutte le operazioni svolte da un utente,
 l'altro contenente il pattern che vogliamo analizzare, come mostrato in figura \ref{fig:broadcastState1}.
-\begin{figure}[H]
+\begin{figure}[htpb]
     \centering
     \includegraphics[width=0.7\textwidth]{images/EventExport/broadcastState1.png}
     \caption{Stream di dati e stream di regole}
