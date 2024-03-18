@@ -49,6 +49,9 @@ e le properties contenenti credenziali per accedere allo \textit{Schema Registry
 La configurazione del \textit{Kafka Consumer} e del deserializzatore \textit{Avro} è definita in un file \textit{.properties} e principalmente contiene
 l'url dell'endpoint, le credenziali e diversi parametri per la connessione.
 In un caso (\textit{Kafka}) è riferita al \textit{Broker Kafka} e nell'altro allo \textit{Schema Registry} (\textit{Avro}).
+\subsection{Struttura del dato}
+\label{subsec:StrutturaDelDato}
+\todo{parlare di cosa arriva dal topic. quantomeno del fatto che un recrod contiene l'altra lista di record}
 
 \section{Lettura della tabella di configurazione}
 \label{sec:LetturaDellaTabellaDiConfigurazione}
@@ -90,4 +93,112 @@ La tabella \ref{tab:TradingPartnerEventLookup} è un esempio di come potrebbe es
     \item \textbf{OT}: \textit{BusinessObjectType} il tipo di evento (1 Spedizione – 2 Ritiro – 5 Ordini).
     \item \textbf{ERP}: Lo specifico evento, ad esempio \textit{08} è l'evento di creazione di un ordine, \textit{GEO} è l'evento di modifica della posizione di un ordine.
     \item \textbf{Active}: se il filtro è attivo.
+\end{itemize}
+
+\textit{Flink} è basato sulla computazione distribuita di stream di dati (vedasi sezione \ref{sec:flink_overview}),
+ciò va tenuto durante la creazione della cache per la tabella di configurazione. 
+Infatti implementando una semplice cache locale (attraverso una \texttt{HashMap} ad esempio), si potrebbero avere problemi di consistenza dei dati e di sincronizzazione tra i vari nodi.
+Inoltre tale implementazione non sfrutta le potenzialità di \textit{Flink} e la sua gestione automatica della scalabilità.
+Per mostrare le problematiche di una cache implementata in maniera non corretta, si consideri il seguente esempio:\\
+All'interno di un \textit{job}  viene creato un metodo che legge la tabella di configurazione e la memorizza in una \texttt{HashMap}, ogni 10 minuti la cache viene aggiornata.
+Automaticamente il \textit{job} viene scalato su più nodi da \textit{Flink}, ogni nodo avrà la sua copia della cache e tale cache verrà aggiornata in maniera indipendente.
+Questo comporta prima di tutto un problema di consistenza dei dati, in quanto un nodo potrebbe avere una copia della cache diversa 
+qualora fosse impegnato in una computazione al momento dell'aggiornamento.
+Ma soprattutto ogni nodo effettua una query al database in fase di aggiornamento, causando una serie di richieste tutti identiche e quindi ridondanti.
+Se ad esempio il \textit{job} viene scalato su 10 nodi, ci saranno 10 richieste al database ad ogni aggiornamento, quando invece ne basterebbe una sola.\\\\
+Il modo corretto di gestire questa cache è di utilizzare un datastream che legga la tabella di configurazione e la mantenga aggiornata, in collaborazione con il pattern 
+\textbf{Broadcast State Pattern} per la distribuzione della cache tra i vari nodi.
+
+\subsection{Rules Based Stream Processing}
+\label{subsec:RulesBasedStreamProcessing}
+Il \textit{Broadcast State Pattern} è un pattern di \textit{Flink} che permette di distribuire uno stato tra tutti i nodi di un job.
+Questo stato è distribuito in maniera efficiente e scalabile, inoltre è possibile aggiornarlo in maniera asincrona.
+Il \textit{Broadcast State Pattern} è fondamentale per la creazione di un sistema di \textit{Rules Based Stream Processing}, 
+cioè un sistema che applica delle regole ad un flusso di dati.\\
+Ci sono quindi due flussi di dati, uno contenente le regole e l'altro i dati a cui applicare le regole.
+Ogni nodo mantiene un \textit{Broadcast State}, cioè una mappa che viene aggiornata all'arrivo di nuove regole.
+Quando una nuova regola arriva dalla sorgente del flusso di regole, questa viene distribuita a tutti i nodi che andranno ad aggiornare il loro \textit{Broadcast State}
+con la nuova regola, secondo quanto definito nel codice. In questo modo ogni nodo ha sempre una copia aggiornata delle regole da poter confrontare con i dati in arrivo sul flusso principale.
+Quando invece un dato arriva sul flusso principale questi viene direttamente analizzato dal nodo che, eventualmente avvalendosi del \textit{Broadcast State}, lo elabora 
+secondo quanto definito dalla logica implementativa.\\\\
+Ad esempio (\todo{esempio preso dala documentazione di FLink, citarlo}), se una compagnia volesse analizzare le abitudini di acquisto su un e-commerce dei loro clienti 
+potrebbe avvalersi di un \textit{Rules Based Stream Processing}. Quindi si avrebbero due stream, uno contenente tutte le operazioni svolte da un utente,
+l'altro contenente il pattern che vogliamo analizzare, come mostrato in figura \ref{fig:broadcastState1}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/EventExport/broadcastState1.png}
+    \caption{Stream di dati e stream di regole}
+    \label{fig:broadcastState1}
+\end{figure}
+Appena arriva una nuova regola, questa viene distribuita a tutti i nodi, che aggiorneranno i loro \textit{Broadcast State}.
+Nel caso in figura \ref{fig:broadcastState2} ad esempio, il pattern appena giunto è l'operazione di ingresso al sito seguita da un'uscita, senza acquisti.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/EventExport/broadcastState2.png}
+    \caption{Aggiornamento del \textit{Broadcast State}}
+    \label{fig:broadcastState2}
+\end{figure}
+Successivamente, quando arriva un nuovo dato, questo viene analizzato dal nodo che, avvalendosi del \textit{Broadcast State}, lo elabora secondo quanto definito dalla regola.
+Ad esempio nella sezione sinistra della figura \ref{fig:broadcastState3/4}, si può notare che viene ricevuto il seguente dato \textit{il cliente 1001 entra nel sito}.
+Nel frattempo gli altri due clienti effettuano altre operazioni che vengono inviate ai relaviti nodi.
+Successivamente arriva un altro dato \textit{il cliente 1001 esce dal sito} (parte destra della figura), che viene inviato al primo nodo.
+Questo nodo, avendo memoria della regola impostata nel \textit{Broadcast State}, riconosce il pattern e lo invia al sistema di analisi.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/EventExport/broadcastState3.png}
+    \includegraphics[width=0.49\textwidth]{images/EventExport/broadcastState4.png}
+    \caption{Esempio di pattern riconosciuto}
+    \label{fig:broadcastState3/4}
+\end{figure}
+
+\subsection{Implementazione del Rules Based Stream Processing}
+\label{subsec:ImplementazioneDelRulesBasedStreamProcessing}
+Come descritto in precedenza (sezione \ref{subsec:RulesBasedStreamProcessing}), il Rules Based Stream Processing è un sistema che applica delle regole ad un flusso di dati.
+In questo caso le regole sono le letture della tabella \textit{TradingPartnerEventLookup} e il flusso di dati è quello dei \textit{Business Event} provenienti dal \textit{Signaling Topic}
+\begin{code}
+    \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/TradingPartnerBroadcast.java}
+    \caption{creazione del Broadcast Stream}
+    \label{lst:EventExportRulesBasedStreamProcessing}
+\end{code}
+La prima operazione, mostrata nel codice \ref{lst:EventExportRulesBasedStreamProcessing}, è la creazione del \texttt{Broadcast Stream} partendo dallo stream \texttt{TradingPartnerEventLookupStream}.
+Tale stream è un \textit{DataStream} che legge la tabella \textit{TradingPartnerEventLookup} ogni ora e ne mantiene una copia aggiornata. 
+Ogni evento presente in tale stream corrisponde ad una intera copia della tabella, infatti il tipo di dato che lo compone è \texttt{List<TradingPartnerEventLookup>}, 
+cioè una lista di regole (ogni regola corrisponde ad una riga della tabella \textit{TradingPartnerEventLookup}).\\\\
+Ottenuto il \texttt{Broadcast Stream} si può procedere con il collegamento al flusso principale, cioè quello dei \textit{Business Event},
+di cui è già stata trattata la creazione nella sezione \ref{sec:LetturaDelSignalingTopic}. 
+\begin{code}
+    \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/StreamConnection.java}
+    \caption{collegamento del \textit{Broadcast Stream} allo stream di dati}
+    \label{lst:StreamsConnection}
+\end{code}
+Come prima operazione c'è una fase di filtro dei record \texttt{SignalingTopicRecord} che non hanno \texttt{SignalingEvent} (cioè non hanno ricevuto aggiornamenti, 
+oppure sono appena stati creati e non ancora popolati), questo perchè non è necessario processare eventi che non hanno dati.
+Poi si procede con una operazione di mappatura, per comodità di elaborazione, in cui si genera un \texttt{Tuple2} contenente il \texttt{SignalingTopicRecord}
+ed un \texttt{SignalingEvent}, questo per ognuno dei \texttt{SignalingEvent} ad esso associati.
+Dopo un ultima fase di filto, atta ad eliminare le tuple che indicano operazioni di cancellazione (riga 12), si procede con la connessione al \textit{Broadcast Stream}
+tramite il metodo \texttt{connect} (riga 13).
+Infine si applica il \textit{Broadcast State pattern}, operazione effettuata dal metodo \texttt{process} (riga 14).\\\\
+La classe \texttt{TradingPartnerRuleEvaluator} è una classe che estende la classe \texttt{BroadcastProcessFunction} ed è la classe che si occupa di applicare il \textit{Broadcast State pattern}.
+La sua implementazione è mostrata nel codice \ref{lst:TradingPartnerRuleEvaluator}.
+\begin{code}
+    \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/TradingPartnerRuleEvaluator.java}
+    \caption{Implementazione della classe \texttt{TradingPartnerRuleEvaluator}}
+    \label{lst:TradingPartnerRuleEvaluator}
+\end{code}
+Le due funzioni, \texttt{processElement} e \texttt{processBroadcastElement}, sono rispettivamente la funzione che processa i dati del flusso principale e la funzione che processa i dati del \textit{Broadcast Stream}.
+\begin{itemize}
+    \item \texttt{processBroadcastElement} (riga 38) è la funzione che processa i dati del \textit{Broadcast Stream}, cioè le regole.
+    Quando arriva un nuovo \textit{Broadcast Element} (cioè una nuova lista di regole) questa funzione aggiorna il \textit{Broadcast State} con le nuove regole.
+    Per prima cosa recupera il \textit{Broadcast State} tramite il suo \texttt{Descriptor} (riga 42) e poi scorre la lista di regole generando una \texttt{Map} (riga 44).
+    Questa \texttt{Map} è la rappresentazione delle regole in un formato più efficiente, in cui il valore è la regola stessa e la chiave è una stringa che identifica univocamente la regola
+    (\textit{TradingPartner + OT + ERP}).
+    \item \texttt{processElement} (riga 17) è la funzione che processa i dati del flusso principale, cioè i \textit{Business Event}.
+    Quando un nuovo elemento arriva questa funzione per prima cosa ricalcola la chiave con cui andare a cercare le regole nel \textit{Broadcast State} (riga 20).
+    Poi controlla se la chiave è presente nel \textit{Broadcast State} (riga 24), se non è presente viene segnalato l'errore tramite log4j, altrimenti si procede con l'elaborazione.
+    Nell'elaborazione avviene un controllo riguardo lo stato della regola (riga 27), se la regola è attiva viene restituita una tripla (Tuple3) così composta:
+    \begin{itemize}
+        \item \texttt{SignalingTopicRecord}: Record ottenuto dal \textit{Topic}.
+        \item \texttt{SignalingEvent\_record}: Evento singolo ottenuto dal \texttt{Signaling\-Topic\-Record}.
+        \item \texttt{TradingPartnerEventLookup}: la regola relativa all'evento.
+    \end{itemize}
 \end{itemize}
