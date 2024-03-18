@@ -185,3 +185,20 @@ La sua implementazione è mostrata nel codice \ref{lst:TradingPartnerRuleEvaluat
     \caption{Implementazione della classe \texttt{TradingPartnerRuleEvaluator}}
     \label{lst:TradingPartnerRuleEvaluator}
 \end{code}
+Le due funzioni, \texttt{processElement} e \texttt{processBroadcastElement}, sono rispettivamente la funzione che processa i dati del flusso principale e la funzione che processa i dati del \textit{Broadcast Stream}.
+\begin{itemize}
+    \item \texttt{processBroadcastElement} (riga 38) è la funzione che processa i dati del \textit{Broadcast Stream}, cioè le regole.
+    Quando arriva un nuovo \textit{Broadcast Element} (cioè una nuova lista di regole) questa funzione aggiorna il \textit{Broadcast State} con le nuove regole.
+    Per prima cosa recupera il \textit{Broadcast State} tramite il suo \texttt{Descriptor} (riga 42) e poi scorre la lista di regole generando una \texttt{Map} (riga 44).
+    Questa \texttt{Map} è la rappresentazione delle regole in un formato più efficiente, in cui il valore è la regola stessa e la chiave è una stringa che identifica univocamente la regola
+    (\textit{TradingPartner + OT + ERP}).
+    \item \texttt{processElement} (riga 17) è la funzione che processa i dati del flusso principale, cioè i \textit{Business Event}.
+    Quando un nuovo elemento arriva questa funzione per prima cosa ricalcola la chiave con cui andare a cercare le regole nel \textit{Broadcast State} (riga 20).
+    Poi controlla se la chiave è presente nel \textit{Broadcast State} (riga 24), se non è presente viene segnalato l'errore tramite log4j, altrimenti si procede con l'elaborazione.
+    Nell'elaborazione avviene un controllo riguardo lo stato della regola (riga 27), se la regola è attiva viene restituita una tripla (Tuple3) così composta:
+    \begin{itemize}
+        \item \texttt{SignalingTopicRecord}: Record ottenuto dal \textit{Topic}.
+        \item \texttt{SignalingEvent\_record}: Evento singolo ottenuto dal \texttt{Signaling\-Topic\-Record}.
+        \item \texttt{TradingPartnerEventLookup}: la regola relativa all'evento.
+    \end{itemize}
+\end{itemize}
