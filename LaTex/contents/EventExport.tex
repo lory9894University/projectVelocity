@@ -216,3 +216,44 @@ Le due funzioni, \texttt{processElement} e \texttt{processBroadcastElement}, son
         \item \texttt{TradingPartnerEventLookup}: la regola relativa all'evento.
     \end{itemize}
 \end{itemize}
+
+\section{Lettura della tabella di Determinazione}
+\label{sec:LetturaDellaTabellaDiDeterminazione}
+Una volta associato un evento ad una regola, si procede con l'analisi dell'evento. La tabella \textit{TradingPartnerEventLookup} infatti definisce solo se il cliente vuole aggiornamenti sul dato,
+ma non definisce per quali eventi è necessario un aggiornamento e per quali no. 
+Il dato va quindi analizzato per capire se è necessario inviarlo al cliente e, in caso affermativo, quali dati devono essere inseriti nel messaggio.
+Le specifiche di questa operazione sono definite in un'altra tabella, chiamata \textit{LogicDeterminationEvent}.
+Nella tabella sono specificate le regole di determinazione per ogni evento, ad esempio se un l'aggiunta di note, la creazione o la modifica 
+devono triggerare l'invio di un messaggio al cliente.
+A livello implementativo questa tabella è gestita in maniera simile alla tabella \textit{TradingPartnerEventLookup}, tramite il \textit{Broadcast State pattern}.
+
+\section{Conversione del dato in XML}
+\label{sec:ConversioneDelDatoInXML}
+Una volta ottenute tutte le regole necessarie per l'elaborazione, si procede con la creazione del messaggio da inviare al cliente.
+Per fare ciò, rispettando la logica a \textit{Datastream} di \textit{Flink}, si procede con la creazione di un nuovo oggetto che rappresenta il messaggio da inviare.
+Tale oggetto viene arricchito in passi successivi tramite operazioni di \textit{map} e \textit{filter}.
+L'arricchimento avviene tramite l'aggiunta di campi al messaggio, a seconda delle regole di determinazione, prendendo eventuali informazioni aggiuntive dal database.
+In questo caso non c'è la necessità di utilizzare il \textit{Broadcast State pattern}, in quanto le richieste sono sporadiche e molto varie,
+inserire un meccanismo di \textit{caching} non porterebbe benefici.
+Quindi si procede con una semplice query al database per ottenere le informazioni necessarie, sfruttando il \textit{Repository Patterns}.
+\begin{code}
+    \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/RepositoryPattern.java}
+    \caption{Esempio di \textit{Repository Pattern}}
+    \label{lst:RepositoryPattern}
+\end{code}
+Come mostrato nel codice d'esempio \ref{lst:RepositoryPattern}, il \textit{Repository Pattern} viene implementato tramite \textit{Hibernate} e \textit{JPA}.
+Le query sono scritte in \textit{HQL} e vengono eseguite tramite il metodo \texttt{findQuery} della classe \texttt{HibernateUtils}.
+Allo stesso modo, le scritture sul database vengono effettuate tramite il metodo \texttt{save} della classe \texttt{HibernateUtils}.\\\\
+
+Le operazioni di arricchiamento dell'oggetto \texttt{ExportEventToSend} non sono mostrate in dettaglio, in quanto sono logiche di business non rilevanti nell'ambito di questa tesi.
+Comunque in seguito a queste operazioni si ottiene un oggetto \texttt{ExportEventToSend} completo ed anche la sua rappresentazione in formato \textit{XML}.
+L'oggetto viene quindi salvato, sempre tramite \textit{Hibernate}, in una tabella di log (\textit{TransportOrdersExportEvents}) per scopi di logging.
+Il record contiene tutti i dati dell'oggetto, compreso di regole di determinazione, regole di configurazione ed il messaggio in formato \textit{XML}.
+Il messaggio in formato \textit{XML} viene poi inviato al cliente.
+
+\section{Invio del messaggio}
+\label{sec:InvioDelMessaggio}
+L'invio del messaggio avviene tramite un servizio esterno, chiamato \textit{IBM Sterling}, che si occupa di inviare mail ai clienti.
+Si comunica con questo servizio tramite un servizio \textit{FTP}, in cui si carica il file \textit{XML},
+\textit{Sterling} periodicamente controlla la presenza di nuovi file e li invia ai clienti.
+
