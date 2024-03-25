@@ -256,4 +256,25 @@ Il messaggio in formato \textit{XML} viene poi inviato al cliente.
 L'invio del messaggio avviene tramite un servizio esterno, chiamato \textit{IBM Sterling}, che si occupa di inviare mail ai clienti.
 Si comunica con questo servizio tramite un servizio \textit{FTP}, in cui si carica il file \textit{XML},
 \textit{Sterling} periodicamente controlla la presenza di nuovi file e li invia ai clienti.
+Dal punto di vista implementativo ciò avviene tramite ciò che in \textit{Flink} viene definito \textbf{User-defined Sinks},
+cioè una classe che estende la classe \texttt{SinkFunction} e che funge da endpoint per un \textit{datastream} (come discusso nella sezione \ref{subsec:datastream_api}).
+Ciò viene fatto tramite una semplice chiamata al metodo \texttt{addSink} del \textit{datastream} che contiene il messaggi da inviare.
+\mintinline{java}|eventToSendDataStream.addSink(new sendXMLSink())|\\
+\begin{absolutelynopagebreak}
+\begin{code}
+    \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/sendXMLSink.java}
+    \caption{User-defined Sink per l'invio del messaggio}
+    \label{lst:sendXMLSink}
+\end{code}
+\end{absolutelynopagebreak}
+La classe \texttt{sendXMLSink} è una classe che estende la classe \texttt{SinkFunction} e che implementa il metodo \texttt{invoke}.
+Come mostrato nel codice \ref{lst:sendXMLSink} nel \textit{Constructor} della classe viene inizializzato il servizio \texttt{MailboxService},
+che si occupa effettivamente di inviare il messaggio.
+Il metodo \texttt{invoke} invece è il metodo che viene chiamato per ogni record del \textit{datastream},
+cioè per ogni \texttt{ExportEvent} pronto ad essere spedito.
+In questo metodo si richiede quindi al servizio \texttt{MailboxService} di creare il documento sul server \textit{FTP} e poi,
+grazie ad un \textit{id} ritornato dal servizio, di inserire nella coda di invio il documento.\\\\
+
+Le operazioni specifiche di invio sono nascoste all'interno della classe \texttt{MailboxService}.
+\todo{chiedere alla Petrone se è il caso di approfondire o no, di base si tratta di semplici chiamate effettuate tramite HTTP, tutta business logic}
 

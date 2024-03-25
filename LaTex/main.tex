@@ -103,7 +103,13 @@ sorting=ynt
 % rimozione del prefix per le tabelle
 \captionsetup[table]{labelformat=empty}
 
-% environment per impostare il codice in piu' pagine (\bgroup \egroup serve ad evutare che venga diviso da page breaks)
+\newenvironment{absolutelynopagebreak}
+  {\par\nobreak\vfil\penalty0\vfilneg
+   \vtop\bgroup}
+  {\par\xdef\tpd{\the\prevdepth}\egroup
+   \prevdepth=\tpd}
+
+% environment per impostare il codice in piu' pagine (\bgroup \egroup serve ad evutare che venga diviso da page breaks (cosa che non funziona))
 \newenvironment{code}{\captionsetup{type=listing}\bgroup}{\egroup\hfill\break}
 % imposta la "profondità" delle sezioni che devono essere numerate (secnumdepth) o mostrate nell'indice (tocdepth). 3 è subsubsection
 \setcounter{secnumdepth}{3}
