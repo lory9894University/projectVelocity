@@ -112,8 +112,25 @@ Come anticipiato i tipi di dato trattato sono sempre \texttt{streams} che posson
 Sui flussi \textit{Bounded} possono essere eseguite tutte le operazioni eseguibili sui flussi \textit{Unbounded}, ma non viceversa.
 Per fare ciò bisogna ricorrere a delle operazioni di \textit{windowing}, cioè dividere il flusso in finestre (temporali o di conteggio 
 \footnote{Per \textit{finestra di conteggio} si intende una finestra che contiene un numero fisso di elementi, ad esempio una finestra di 100 elementi.
-In inglese si parla di \textit{count window}. maggiori informazioni nella sezione \textit{Windowing} \ref{subsec:flink_windowing}}
-) e poi eseguire le operazioni su queste finestre.
+In inglese si parla di \textit{count window}. maggiori informazioni nella sezione \textit{Windowing} \ref{subsec:flink_windowing}})
+e poi eseguire le operazioni su queste finestre.
+
+\subsection{DataStream API}
+\label{subsec:datastream_api}
+\textit{Flink} fornisce una API per la creazione di applicazioni di elaborazione di dati, chiamata \texttt{DataStream API}.
+Questa API permette di creare applicazioni che operano su flussi di dati basandosi sul concetto di \textbf{Datastream}.
+Un \textit{DataStream} è \textit{"a class that is used to represent a collection of data in a Flink program"}\cite{flinkwebsite}, cioè una collezione 
+immutabile di dati. Collezione immutabile significa che una volta creato un \textit{DataStream} non è possibile modificarlo, ne accedere direttamente ai dati,
+ma è possibile applicare delle trasformazioni (filtro, map, reduce) per ottenere un nuovo \textit{DataStream}.\\\\
+Ogni \textit{DataStream} nasce da una \textit{Source}, cioè una sorgente di dati, e termina in un \textit{Sink}, cioè una destinazione dei dati. 
+Tali operatori sono chiamati \textbf{Connectors}.
+I \textit{connectors} possono potenzialmente essere qualsiasi cosa (un file, un database, o un altro flusso di dati), 
+in generale però è buona norma che questi siano basati su eventi, dato che \textit{Flink} è pensato per lavorare su flussi di dati.
+\textit{Flink} fornisce dei \textit{connectors} predefiniti per i più comuni tipi di sorgenti e destinazioni, come ad esempio \textit{sockets, console, files, ...},
+ed anche dei \textit{connectors} sviluppati da \textit{Apache} stessa, come \textit{Kafka, RabbitMQ, Elasticsearch, ...}. 
+% \todo{inserire link a https://nightlies.apache.org/flink/flink-docs-release-1.18/docs/dev/datastream/overview/#data-sinks}
+Inoltre si posso trovare \textit{connectors} sviluppati da terza parti ed è sempre possibile implementarne di nuovi in base alle proprie esigenze.  
+
 
 \subsection{Statefull stream processing}
 \label{subsec:flink_statefull_processing}
@@ -135,8 +152,6 @@ dato che ci assicura non ci saranno conflitti tra le operazioni eseguite su part
 Nell'esempio precedente (listing \ref{lst:keyed_stream}) la somma potrebbe venire calcolata in parallelo per ogni chiave, dato che lo stato mantenuto dal sistema,
 che corrispone semplicemente alla variabile \texttt{accumulator}, non viene mai acceduto durante la computazione di un dato avente un'altra chiave, posto naturalmente che si abbia a disposizione sufficienti risorse computazionali.
 Il discorso di come \textit{Flink} gestisca le risorse è approfondito nella sezione \ref{subsubsec:flink_Task_slots}.
-
-\todo{parlare del checkpointing?}
 
 \subsection{Windowing}
 \label{subsec:flink_windowing}
@@ -242,6 +257,19 @@ Come si può vedere nell'immagine \ref{fig:flink_slots} dove i \texttt{Task} \te
     \caption{Task Slots sharing}
     \label{fig:flink_slots}
 \end{figure}
+
+\subsection{Table API \& SQL}
+\label{subsec:flink_table_api}
+Alternativamente alla \textit{DataStream API}, presentata in sezione \ref{subsec:datastream_api}, è possibile utilizzare la \textit{Table API}
+ per scrivere programmi ed eseguirli su \textit{Apache Flink}.
+La \textit{Table API} è un'API di alto livello per \textit{Flink} che permette di scrivere query SQL-like per elaborare i dati.
+Le query scritte in un linguaggio SQL-like e vengono tradotte in \texttt{operatori}, 
+allo stesso modo di come avviene con i programmi scritti tramite la \textit{DataStream API}.
+L'unica differenza è quindi la sintassi con cui ci si interfaccia con il motore di esecuzione, a livello di esecuzione non ci sono differenze.
+In questo progetto non è stata utilizzata la \textit{Table API}, in parte perchè non necessaria (il resto del sistema è \textit{stream-oriented}) ed in parte
+perchè si tratta di una funzionalità ancora in fase di sviluppo e disponibile solo nelle ultime due versioni di \textit{Flink} (1.19 e 1.20-SNAPSHOT).
+In ogni caso la \textit{Table API} è una API su cui Apache sta investendo molto e che diventerà parte integrante di \textit{Flink} in futuro, quindi 
+ho ritenuto necessario parlarne brevemente per completezza.
 
 \subsection{Apache Avro}
 \label{subsec:avro_overview}
