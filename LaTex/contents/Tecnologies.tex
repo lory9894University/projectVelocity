@@ -29,15 +29,20 @@ Un \texttt{Cluster} di esempio è mostrato in figura \ref{fig:kafka_cluster}
     \caption{Kafka Cluster}
     \label{fig:kafka_cluster}
 \end{figure}
+\\\texttt{Kafka} è pensato per essere scalabile, fault-tollerant e ad alte prestazioni.
+É scalabile in quanto è possibile aggiungere o rimuovere \texttt{Brokers} in modo dinamico, senza interrompere il servizio.
+É fault-tollerant in quanto è possibile configurare repliche dei \textit{Brokers} in modo da garantire che i dati siano sempre disponibili, anche in caso di guasto di un \texttt{Broker}.
+Ed infine è ad alte prestazioni in quanto la responsabilità di ogni \texttt{Broker} è limitata, cioè ogni \texttt{Broker} si occupa solo di un sottoinsieme dei \textit{Topic} presenti nel \texttt{Cluster}, 
+permettendo di distribuire sia il carico computazionale si il carico di rete, di modo che nessun \texttt{Broker} sia sovraccaricato.
 % dovrei citare la fonte della figura https://www.scaler.com/topics/kafka-cluster/
 
 \subsection{Topic}
 \label{subsec:kafka_topics}
-
 Un \textit{Kafka Topic} è un database ad eventi, al posto di pensare in termini di oggetti, si pensa in termini di eventi.
 Diversi microservizi possono consumare o pubblicare sullo stesso \textit{Topic}, similmente ad un \texttt{Message Broker} infatti i \textit{Topic} sono \textit{multi-producer} e \textit{multi-subscribers}.
-A differenza di un \texttt{Message Broker} però un \textit{Topic} può mantenere dei record in maniera sicura per una durata di tempo indefinita, come se fosse un database.Gli \textbf{Eventi} infatti non sono eliminati dopo esser stati letti da un \textit{Consumer},
-il tempo di mantenimento di un record può essere configurato in modo da stabilire un equilibrio tra quantità di dati salvati e efficienza delle elaborazioni, dato che ad un numero maggiore di record corrisponde un tempo di elaborazione maggiore.\\\\
+A differenza di un \texttt{Message Broker} però un \textit{Topic} può mantenere dei record in maniera sicura per una durata di tempo indefinita, come se fosse un database.
+Gli \textbf{Eventi} infatti non sono eliminati dopo esser stati letti da un \textit{Consumer}, anzi, non è nemmeno possibile eliminarli manualmente.
+Il tempo di mantenimento di un record può essere configurato in modo da stabilire un equilibrio tra quantità di dati salvati e efficienza delle elaborazioni, dato che ad un numero maggiore di record corrisponde un tempo di elaborazione maggiore.\\\\
 I \textit{Topic} sono partizionati per permettere high-availability, fault-tollerance e soprattutto consentire la lettura/scrittura in parallelo.
 Infatti ogni \textit{Topic} è distribuito tra vari \textit{buckets}, che si trovano nei \texttt{Kafka Brokers}.
 Eventi definita dalla stessa \textit{Key} sono scritti nella stessa partizione e \textit{Kafka} garantisce che qualsiasi \textit{Consumer} iscritto a tale partizione leggerà gli eventi nello stesso ordine in cui sono stati scritti.
@@ -49,9 +54,24 @@ Un esempio di partizionamento è mostrato in figura \ref{fig:kafka_topic}
     \caption{Partizionamento Kafka Topic}
     \label{fig:kafka_topic}
 \end{figure}
-%https://docs.datastax.com/en/kafka/doc/kafka/kafkaHowMessages.html
+%fonte della figura https://docs.datastax.com/en/kafka/doc/kafka/kafkaHowMessages.html
 
-\newpage
+\subsection{Brokers}
+\label{subsec:kafka_brokers}
+A differenza degli altri \textit{message broker} Kafka è molto improntato sulla scalabilità, per permettere ciò i  messaggi non vengono gestiti da un unico serivizio,
+bensi da un insieme di servizi indipendanti detti \textbf{Brokers}. Questo gruppo di \textit{Brokers} che lavorano insieme costituisce un \textit{Kafka Cluster}.
+Questo oltre a garantire una maggiore affidabilità (se un broker smette di funzionare non si perde tutto il sistema), 
+permette di scalare orizzontalmente il sistema, aggiungendo nuovi \textit{brokers} qualora fosse necessario.
+I \textit{brokers} permettono anche un meccanismo di replica dei dati, sia per scopi di scalabilità che per garantire la fault-tollerance.
+L'unità che viene replicata è la partizione di un \textit{Topic}, ogni partizione è replicata su un numero di \textit{brokers} configurabile,
+andando a definire due categorie di \textit{brokers}: i \textbf{leader} ed i \textbf{followers}, 
+ogni partizione ha un almeno un \textit{leader} ed un numero arbitratio di \textit{followers}.\\\\
+Il servizio che si occupa di coordinare i vari \textit{Brokers} all'interno del \textit{Cluster} è chiamato \textbf{leader} ed è un nodo con maggiori responsabilità.
+Infatti il \textit{leader} è un \textit{broker} il cui scopo principale è coordinare le richieste di lettura e scrittura da parte dei \textit{clients} \ref{subsec:kakfa_clients}.
+Ciò risulta necessario per garantire che i dati siano coerenti e che non ci siano conflitti tra le operazioni di scrittura e lettura,
+infatti un \textit{producer} scriverà sempre sul \textit{leader} ed i \textit{followers} si occuperanno di mantenere i dati aggiornati,
+tutto ciò per evitare problemi di incosistenza dei dati senza bisogno di introdurre meccanismi di mutuo aggiornamento tra i \textit{brokers}. 
+
 \subsection{Clients}
 \label{subsec:kakfa_clients}
 I \texttt{Consumers} ed i \texttt{Producers}, insieme ai \textit{Topics}, sono gli elementi alla base del funzionamento di \textit{Kafka}.
