@@ -25,7 +25,6 @@ Il microservizio compie le seguenti operazioni:
     \item Loggare l'evento, compreso di XML, in una tabella (\textit{TransportOrdersExportEvents}) per tenere traccia degli eventi inviati.
 \end{enumerate}
 
-
 \section{Lettura del Signaling Topic}
 \label{sec:LetturaDelSignalingTopic}
 La lettura del \textit{Signaling Topic} avviene tramite un \textit{Consumer} Kafka.
@@ -108,7 +107,6 @@ La tabella \ref{tab:TradingPartnerEventLookup} è un esempio di come potrebbe es
     \item \textbf{ERP}: Lo specifico evento, ad esempio \textit{08} è l'evento di creazione di un ordine, \textit{GEO} è l'evento di modifica della posizione di un ordine.
     \item \textbf{Active}: se il filtro è attivo.
 \end{itemize}
-
 \textit{Flink} è basato sulla computazione distribuita di stream di dati (vedasi sezione \ref{sec:flink_overview}),
 ciò va tenuto durante la creazione della cache per la tabella di configurazione. 
 Infatti implementando una semplice cache locale (attraverso una \texttt{HashMap} ad esempio), si potrebbero avere problemi di consistenza dei dati e di sincronizzazione tra i vari nodi.
@@ -244,7 +242,6 @@ Quindi si procede con una semplice query al database per ottenere le informazion
 Come mostrato nel codice d'esempio \ref{lst:RepositoryPattern}, il \textit{Repository Pattern} viene implementato tramite \textit{Hibernate} e \textit{JPA}.
 Le query sono scritte in \textit{HQL} e vengono eseguite tramite il metodo \texttt{findQuery} della classe \texttt{HibernateUtils}.
 Allo stesso modo, le scritture sul database vengono effettuate tramite il metodo \texttt{save} della classe \texttt{HibernateUtils}.\\\\
-
 Le operazioni di arricchiamento dell'oggetto \texttt{ExportEventToSend} non sono mostrate in dettaglio, in quanto sono logiche di business non rilevanti nell'ambito di questa tesi.
 Comunque in seguito a queste operazioni si ottiene un oggetto \texttt{ExportEventToSend} completo ed anche la sua rappresentazione in formato \textit{XML}.
 L'oggetto viene quindi salvato, sempre tramite \textit{Hibernate}, in una tabella di log (\textit{TransportOrdersExportEvents}) per scopi di logging.
@@ -259,7 +256,7 @@ Si comunica con questo servizio tramite un servizio \textit{FTP}, in cui si cari
 Dal punto di vista implementativo ciò avviene tramite ciò che in \textit{Flink} viene definito \textbf{User-defined Sinks},
 cioè una classe che estende la classe \texttt{SinkFunction} e che funge da endpoint per un \textit{datastream} (come discusso nella sezione \ref{subsec:datastream_api}).
 Ciò viene fatto tramite una semplice chiamata al metodo \texttt{addSink} del \textit{datastream} che contiene il messaggi da inviare.
-\mintinline{java}|eventToSendDataStream.addSink(new sendXMLSink())|\\
+\mintinline{java}|eventToSendDataStream.addSink(new sendXMLSink())|
 \begin{absolutelynopagebreak}
 \begin{code}
     \inputminted[linenos,fontsize=\footnotesize]{java}{listings/EventsExport/sendXMLSink.java}
@@ -274,14 +271,13 @@ Il metodo \texttt{invoke} invece è il metodo che viene chiamato per ogni record
 cioè per ogni \texttt{ExportEvent} pronto ad essere spedito.
 In questo metodo si richiede quindi al servizio \texttt{MailboxService} di creare il documento sul server \textit{FTP} e poi,
 grazie ad un \textit{id} ritornato dal servizio, di inserire nella coda di invio il documento.\\\\
-
 Le operazioni specifiche di invio sono nascoste all'interno della classe \texttt{MailboxService}.
 Nel metodo \texttt{CreateDocument} viene creata una richiesta \textit{HTTP} ad un URL specifico per la creazione del documento (\textit{http://ServerDomain/svc/document}).,
 nel cui corpo è presente il messaggio \textit{XML} codificato in base 64.
 La richiesta viene effettuata da un \textit{HTTP client} che, se il documento è stato caricato corretamente, restituisce il path del documento creato.
 Da questo path si ottiene l'\textit{id} del documento, che viene utilizzato per inserire il documento nella coda di invio.
 Infatti nel metodo \texttt{addMessageToMailBox} si indica a \textit{Sterling} di inserire il documento nella coda di invio tramite una richiesta \textit{HTTP}
-ad un altro URL ()\textit{http://ServerDomain/svc/mailbox}).
+ad un altro URL (\textit{http://ServerDomain/svc/mailbox}).
 Tale richiesta continene nel corpo l'\textit{id} del documento ed il nome del file, che diventerà l'oggetto dell' email.
 Il destinatario viene automaticamente ricavato da \textit{Sterling} tramite quanto scritto nell'XML.
 \todo{chiedere alla Petrone se è il caso di approfondire o no, di base si tratta di semplici chiamate effettuate tramite HTTP, tutta business logic}
