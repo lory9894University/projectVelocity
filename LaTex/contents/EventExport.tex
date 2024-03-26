@@ -276,5 +276,13 @@ In questo metodo si richiede quindi al servizio \texttt{MailboxService} di crear
 grazie ad un \textit{id} ritornato dal servizio, di inserire nella coda di invio il documento.\\\\
 
 Le operazioni specifiche di invio sono nascoste all'interno della classe \texttt{MailboxService}.
+Nel metodo \texttt{CreateDocument} viene creata una richiesta \textit{HTTP} ad un URL specifico per la creazione del documento (\textit{http://ServerDomain/svc/document}).,
+nel cui corpo è presente il messaggio \textit{XML} codificato in base 64.
+La richiesta viene effettuata da un \textit{HTTP client} che, se il documento è stato caricato corretamente, restituisce il path del documento creato.
+Da questo path si ottiene l'\textit{id} del documento, che viene utilizzato per inserire il documento nella coda di invio.
+Infatti nel metodo \texttt{addMessageToMailBox} si indica a \textit{Sterling} di inserire il documento nella coda di invio tramite una richiesta \textit{HTTP}
+ad un altro URL ()\textit{http://ServerDomain/svc/mailbox}).
+Tale richiesta continene nel corpo l'\textit{id} del documento ed il nome del file, che diventerà l'oggetto dell' email.
+Il destinatario viene automaticamente ricavato da \textit{Sterling} tramite quanto scritto nell'XML.
 \todo{chiedere alla Petrone se è il caso di approfondire o no, di base si tratta di semplici chiamate effettuate tramite HTTP, tutta business logic}
 
