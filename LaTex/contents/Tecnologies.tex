@@ -291,5 +291,12 @@ Se invece si usa \textit{Avro} in RPC (\textit{Remote Procedure Call}) non convi
 dato che sarebbe ridondante e aumenterebbe inutilmente la dimensione dei messaggi.
 In questo caso il client ed il server si scambierebbero lo \textit{schema} una sola volta, durante la fase di handshake.
 
-\subsection{Hybernate}
+\subsection{Hybernate JPA}
 \label{subsec:hibernate_overview}
+\texttt{Hibernate} è un \textit{Object-Relational Mapping} \textbf{(ORM)} framework per la piattaforma Java.
+\textbf{ORM} è il processo di mappatura delle classi di un programma Java con le tabelle di un database relazionale.
+In particolare \texttt{Hibernate} fornisce una implementazione di \textit{JPA}, permettendo di interagire con un database relazionale senza dover scrivere codice SQL.
+L'utilizzo più comune di \textit{Hibernate JPA} è quello di implementare un \textit{Repository Pattern}, cioè una classe che si occupa di interagire con il database e di eseguire le query.
+Un Repository class incapsula tutto il codice associato alla persistenza, escludendo però qualsiasi logica di business. 
+Offre metodi per l'inserimento, l'aggiornamento e la rimozione di entità nel database, oltre a metodi per la creazione ed esecuzione di query specifiche.
+L'intento di questo modello è di disaccoppiare il codice di persistenza dal codice di business, migliorando così la riutilizzabilità del codice di persistenza.\\\\
