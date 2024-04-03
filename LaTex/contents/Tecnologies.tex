@@ -29,15 +29,20 @@ Un \texttt{Cluster} di esempio è mostrato in figura \ref{fig:kafka_cluster}
     \caption{Kafka Cluster}
     \label{fig:kafka_cluster}
 \end{figure}
+\\\texttt{Kafka} è pensato per essere scalabile, fault-tollerant e ad alte prestazioni.
+É scalabile in quanto è possibile aggiungere o rimuovere \texttt{Brokers} in modo dinamico, senza interrompere il servizio.
+É fault-tollerant in quanto è possibile configurare repliche dei \textit{Brokers} in modo da garantire che i dati siano sempre disponibili, anche in caso di guasto di un \texttt{Broker}.
+Ed infine è ad alte prestazioni in quanto la responsabilità di ogni \texttt{Broker} è limitata, cioè ogni \texttt{Broker} si occupa solo di un sottoinsieme dei \textit{Topic} presenti nel \texttt{Cluster}, 
+permettendo di distribuire sia il carico computazionale si il carico di rete, di modo che nessun \texttt{Broker} sia sovraccaricato.
 % dovrei citare la fonte della figura https://www.scaler.com/topics/kafka-cluster/
 
 \subsection{Topic}
 \label{subsec:kafka_topics}
-
 Un \textit{Kafka Topic} è un database ad eventi, al posto di pensare in termini di oggetti, si pensa in termini di eventi.
 Diversi microservizi possono consumare o pubblicare sullo stesso \textit{Topic}, similmente ad un \texttt{Message Broker} infatti i \textit{Topic} sono \textit{multi-producer} e \textit{multi-subscribers}.
-A differenza di un \texttt{Message Broker} però un \textit{Topic} può mantenere dei record in maniera sicura per una durata di tempo indefinita, come se fosse un database.Gli \textbf{Eventi} infatti non sono eliminati dopo esser stati letti da un \textit{Consumer},
-il tempo di mantenimento di un record può essere configurato in modo da stabilire un equilibrio tra quantità di dati salvati e efficienza delle elaborazioni, dato che ad un numero maggiore di record corrisponde un tempo di elaborazione maggiore.\\\\
+A differenza di un \texttt{Message Broker} però un \textit{Topic} può mantenere dei record in maniera sicura per una durata di tempo indefinita, come se fosse un database.
+Gli \textbf{Eventi} infatti non sono eliminati dopo esser stati letti da un \textit{Consumer}, anzi, non è nemmeno possibile eliminarli manualmente.
+Il tempo di mantenimento di un record può essere configurato in modo da stabilire un equilibrio tra quantità di dati salvati e efficienza delle elaborazioni, dato che ad un numero maggiore di record corrisponde un tempo di elaborazione maggiore.\\\\
 I \textit{Topic} sono partizionati per permettere high-availability, fault-tollerance e soprattutto consentire la lettura/scrittura in parallelo.
 Infatti ogni \textit{Topic} è distribuito tra vari \textit{buckets}, che si trovano nei \texttt{Kafka Brokers}.
 Eventi definita dalla stessa \textit{Key} sono scritti nella stessa partizione e \textit{Kafka} garantisce che qualsiasi \textit{Consumer} iscritto a tale partizione leggerà gli eventi nello stesso ordine in cui sono stati scritti.
@@ -49,9 +54,24 @@ Un esempio di partizionamento è mostrato in figura \ref{fig:kafka_topic}
     \caption{Partizionamento Kafka Topic}
     \label{fig:kafka_topic}
 \end{figure}
-%https://docs.datastax.com/en/kafka/doc/kafka/kafkaHowMessages.html
+%fonte della figura https://docs.datastax.com/en/kafka/doc/kafka/kafkaHowMessages.html
 
-\newpage
+\subsection{Brokers}
+\label{subsec:kafka_brokers}
+A differenza degli altri \textit{message broker} Kafka è molto improntato sulla scalabilità, per permettere ciò i  messaggi non vengono gestiti da un unico serivizio,
+bensi da un insieme di servizi indipendanti detti \textbf{Brokers}. Questo gruppo di \textit{Brokers} che lavorano insieme costituisce un \textit{Kafka Cluster}.
+Questo oltre a garantire una maggiore affidabilità (se un broker smette di funzionare non si perde tutto il sistema), 
+permette di scalare orizzontalmente il sistema, aggiungendo nuovi \textit{brokers} qualora fosse necessario.
+I \textit{brokers} permettono anche un meccanismo di replica dei dati, sia per scopi di scalabilità che per garantire la fault-tollerance.
+L'unità che viene replicata è la partizione di un \textit{Topic}, ogni partizione è replicata su un numero di \textit{brokers} configurabile,
+andando a definire due categorie di \textit{brokers}: i \textbf{leader} ed i \textbf{followers}, 
+ogni partizione ha un almeno un \textit{leader} ed un numero arbitratio di \textit{followers}.\\\\
+Il servizio che si occupa di coordinare i vari \textit{Brokers} all'interno del \textit{Cluster} è chiamato \textbf{leader} ed è un nodo con maggiori responsabilità.
+Infatti il \textit{leader} è un \textit{broker} il cui scopo principale è coordinare le richieste di lettura e scrittura da parte dei \textit{clients} \ref{subsec:kakfa_clients}.
+Ciò risulta necessario per garantire che i dati siano coerenti e che non ci siano conflitti tra le operazioni di scrittura e lettura,
+infatti un \textit{producer} scriverà sempre sul \textit{leader} ed i \textit{followers} si occuperanno di mantenere i dati aggiornati,
+tutto ciò per evitare problemi di incosistenza dei dati senza bisogno di introdurre meccanismi di mutuo aggiornamento tra i \textit{brokers}. 
+
 \subsection{Clients}
 \label{subsec:kakfa_clients}
 I \texttt{Consumers} ed i \texttt{Producers}, insieme ai \textit{Topics}, sono gli elementi alla base del funzionamento di \textit{Kafka}.
@@ -112,8 +132,25 @@ Come anticipiato i tipi di dato trattato sono sempre \texttt{streams} che posson
 Sui flussi \textit{Bounded} possono essere eseguite tutte le operazioni eseguibili sui flussi \textit{Unbounded}, ma non viceversa.
 Per fare ciò bisogna ricorrere a delle operazioni di \textit{windowing}, cioè dividere il flusso in finestre (temporali o di conteggio 
 \footnote{Per \textit{finestra di conteggio} si intende una finestra che contiene un numero fisso di elementi, ad esempio una finestra di 100 elementi.
-In inglese si parla di \textit{count window}. maggiori informazioni nella sezione \textit{Windowing} \ref{subsec:flink_windowing}}
-) e poi eseguire le operazioni su queste finestre.
+In inglese si parla di \textit{count window}. maggiori informazioni nella sezione \textit{Windowing} \ref{subsec:flink_windowing}})
+e poi eseguire le operazioni su queste finestre.
+
+\subsection{DataStream API}
+\label{subsec:datastream_api}
+\textit{Flink} fornisce una API per la creazione di applicazioni di elaborazione di dati, chiamata \texttt{DataStream API}.
+Questa API permette di creare applicazioni che operano su flussi di dati basandosi sul concetto di \textbf{Datastream}.
+Un \textit{DataStream} è \textit{"a class that is used to represent a collection of data in a Flink program"}\cite{flinkwebsite}, cioè una collezione 
+immutabile di dati. Collezione immutabile significa che una volta creato un \textit{DataStream} non è possibile modificarlo, ne accedere direttamente ai dati,
+ma è possibile applicare delle trasformazioni (filtro, map, reduce) per ottenere un nuovo \textit{DataStream}.\\\\
+Ogni \textit{DataStream} nasce da una \textit{Source}, cioè una sorgente di dati, e termina in un \textit{Sink}, cioè una destinazione dei dati. 
+Tali operatori sono chiamati \textbf{Connectors}.
+I \textit{connectors} possono potenzialmente essere qualsiasi cosa (un file, un database, o un altro flusso di dati), 
+in generale però è buona norma che questi siano basati su eventi, dato che \textit{Flink} è pensato per lavorare su flussi di dati.
+\textit{Flink} fornisce dei \textit{connectors} predefiniti per i più comuni tipi di sorgenti e destinazioni, come ad esempio \textit{sockets, console, files, ...},
+ed anche dei \textit{connectors} sviluppati da \textit{Apache} stessa, come \textit{Kafka, RabbitMQ, Elasticsearch, ...}. 
+% \todo{inserire link a https://nightlies.apache.org/flink/flink-docs-release-1.18/docs/dev/datastream/overview/#data-sinks}
+Inoltre si posso trovare \textit{connectors} sviluppati da terza parti ed è sempre possibile implementarne di nuovi in base alle proprie esigenze.  
+
 
 \subsection{Statefull stream processing}
 \label{subsec:flink_statefull_processing}
@@ -135,8 +172,6 @@ dato che ci assicura non ci saranno conflitti tra le operazioni eseguite su part
 Nell'esempio precedente (listing \ref{lst:keyed_stream}) la somma potrebbe venire calcolata in parallelo per ogni chiave, dato che lo stato mantenuto dal sistema,
 che corrispone semplicemente alla variabile \texttt{accumulator}, non viene mai acceduto durante la computazione di un dato avente un'altra chiave, posto naturalmente che si abbia a disposizione sufficienti risorse computazionali.
 Il discorso di come \textit{Flink} gestisca le risorse è approfondito nella sezione \ref{subsubsec:flink_Task_slots}.
-
-\todo{parlare del checkpointing?}
 
 \subsection{Windowing}
 \label{subsec:flink_windowing}
@@ -243,6 +278,19 @@ Come si può vedere nell'immagine \ref{fig:flink_slots} dove i \texttt{Task} \te
     \label{fig:flink_slots}
 \end{figure}
 
+\subsection{Table API \& SQL}
+\label{subsec:flink_table_api}
+Alternativamente alla \textit{DataStream API}, presentata in sezione \ref{subsec:datastream_api}, è possibile utilizzare la \textit{Table API}
+ per scrivere programmi ed eseguirli su \textit{Apache Flink}.
+La \textit{Table API} è un'API di alto livello per \textit{Flink} che permette di scrivere query SQL-like per elaborare i dati.
+Le query scritte in un linguaggio SQL-like e vengono tradotte in \texttt{operatori}, 
+allo stesso modo di come avviene con i programmi scritti tramite la \textit{DataStream API}.
+L'unica differenza è quindi la sintassi con cui ci si interfaccia con il motore di esecuzione, a livello di esecuzione non ci sono differenze.
+In questo progetto non è stata utilizzata la \textit{Table API}, in parte perchè non necessaria (il resto del sistema è \textit{stream-oriented}) ed in parte
+perchè si tratta di una funzionalità ancora in fase di sviluppo e disponibile solo nelle ultime due versioni di \textit{Flink} (1.19 e 1.20-SNAPSHOT).
+In ogni caso la \textit{Table API} è una API su cui Apache sta investendo molto e che diventerà parte integrante di \textit{Flink} in futuro, quindi 
+ho ritenuto necessario parlarne brevemente per completezza.
+
 \subsection{Apache Avro}
 \label{subsec:avro_overview}
 \texttt{Apache Avro} è un sistema di serializzazione di dati, simile a \texttt{JSON} o \texttt{XML}, ma con un formato binario.
@@ -263,5 +311,12 @@ Se invece si usa \textit{Avro} in RPC (\textit{Remote Procedure Call}) non convi
 dato che sarebbe ridondante e aumenterebbe inutilmente la dimensione dei messaggi.
 In questo caso il client ed il server si scambierebbero lo \textit{schema} una sola volta, durante la fase di handshake.
 
-\subsection{Hybernate}
+\subsection{Hybernate JPA}
 \label{subsec:hibernate_overview}
+\texttt{Hibernate} è un \textit{Object-Relational Mapping} \textbf{(ORM)} framework per la piattaforma Java.
+\textbf{ORM} è il processo di mappatura delle classi di un programma Java con le tabelle di un database relazionale.
+In particolare \texttt{Hibernate} fornisce una implementazione di \textit{JPA}, permettendo di interagire con un database relazionale senza dover scrivere codice SQL.
+L'utilizzo più comune di \textit{Hibernate JPA} è quello di implementare un \textit{Repository Pattern}, cioè una classe che si occupa di interagire con il database e di eseguire le query.
+Un Repository class incapsula tutto il codice associato alla persistenza, escludendo però qualsiasi logica di business. 
+Offre metodi per l'inserimento, l'aggiornamento e la rimozione di entità nel database, oltre a metodi per la creazione ed esecuzione di query specifiche.
+L'intento di questo modello è di disaccoppiare il codice di persistenza dal codice di business, migliorando così la riutilizzabilità del codice di persistenza.\\\\
