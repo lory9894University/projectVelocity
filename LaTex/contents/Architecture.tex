@@ -1,9 +1,7 @@
-%todo: per assurdo posso integrare con la conferenza di arcese ad unito.
-% https://unito.webex.com/webappng/sites/unito/recording/bafd6da87b04103cb3fc06832ece9779/playback
 \chapter{Architettura del sistema}
 \label{ch:architecture}
-Il \textit{Progetto Velocity} è un sistema di Track\&Trace il cui scopo è il monitoraggio in near real time della logistica.
-Al momento il sistema monolitico legacy gestisce tutto, il nuovo sistema, \textit{Velocity}, lo soppianterà gradualmente, seguendo un approcio \textit{brownfield}.
+Il \textit{Progetto Velocity} è una parte di un sistema di Track\&Trace il cui scopo è il monitoraggio in near real time della logistica.
+Al momento il sistema monolitico legacy gestisce tutto, il nuovo sistema, il cui primo componente è \textit{Velocity}, lo soppianterà gradualmente, seguendo un approcio \textit{brownfield}.
 In questo momento si stanno sviluppando i nuovi servizi e li si sta integrando con il vecchio sistema, i nuovi clienti vengono direttamente gestiti con le componenti
 funzionanti del nuovo sistema, i clienti che invece venivano gestiti con il sistema legacy stanno venendo gradualmente trasferiti.
 
@@ -31,7 +29,7 @@ I vari domini non sono isolati l'uno dall'alto, bensì la modifica di una entit�
 In figura \ref{fig:architecture_entities_img} ad esempio modificando una \textit{unità di movimentazione} verrebbe conseguentemente modificata una \textit{tratta}.
 \\
 \\
-Lo scopo del sistema di \textbf{T\&T} è proprio quello di tenere traccia di tutti i cambiamenti subiti dalle varie entità (effettuati dal \textbf{TMS}).
+Lo scopo del sistema \textbf{Velocity} è proprio quello di tenere traccia di tutti i cambiamenti subiti dalle varie entità (effettuati dal \textbf{TMS}).
 Ciò avviene tramite \texttt{Debezium} (sezione \ref{sec:debezium_overview}) che monitora i database del \textbf{TMS} generando eventi di dominio, che verranno poi processati da altri microservizi.
 %nel video quello che io chiamo entità vengono chiamati "root aggregate", anzi ancora diverso. sono tutte entità, ma le entità "viaggio" o "ordine trasporto" sono dei Root Aggregate, cioè degli oggetti che si portano dietro molte altre informazioni.
 Il \textbf{T\&T} si occupa anche di fornire ai clienti informazioni sullo stato e sulla storia di diversi oggetti, composti dalle entità.
@@ -40,12 +38,57 @@ quindi costituito da \textit{Tratta e Fermate} ma anche dalle informazioni rigua
 
 \section{Track and Trace legacy}
 \label{sec:T&T_old}
-Sistema basato su Batch, a regolari intervalli di tempo il sistema va a vedere il nuovo stato delle entità ed aggiorna un suo database interno di oggetti composti.
-\todo{chiedere più info}
+Lo scopo del sistema di \textbf{Track \& Trace}  è quello di fornire al cliente tracciabilità sugli ordini da lui effettuati.
+Ciò può risultare di limitata importanza se si pensa ad un cliente finale, ma quando si tratta di un cliente business,
+che potrebbe necessitare di consegne per iniziare o proseguire lavorazioni, la tracciabilità diventa un requisito fondamentale.
+Il \textbf{T\&T} è una funzionalità già presente nel \textit{TMS}, però questi non genera tutti gli eventi che servono,
+nasce quindi la necessità di avere un software che calcoli questi eventi mancanti, partendo da quelli che il TMS genera e da eventuali fonti esterne (ad esempio le comunicazioni con i camion). 
+Esempio concreto: il TMS genera gli eventi "ordine creato" e "camion partito", ma non genera l'evento "ordine spedito". 
+Andando ad analizzare quali sono gli ordini che sono stati caricati sul camion, il \textit{T\&T} è in grado di generare l'evento "ordine spedito" per ognuno di essi.
+\\\\
+Il \textbf{Track \& Trace legacy} è un software monolitico che gestisce tutto, dalle modifiche agli oggetti di business alla comunicazione con il cliente, basato su batching e non orientato ad eventi.
+Essendo un sistema basato su Batch, a regolari intervalli di tempo va a vedere il nuovo stato delle entità ed aggiorna un suo database interno di oggetti composti.
+L'idea alla base della migrazione in microservizi è quindi quella di partizionare il vecchio sistema monolitico e renderlo basato su microservizi ed ad eventi.
+I vantaggi di creare un sistema orientato ad eventi sono due:
+\begin{itemize}
+    \item Il sistema reagisce prontamente agli eventi, senza dover aspettare che un batch venga eseguito.
+    \item Il sistema intercetta tutti gli eventi, anche quelli intermedi. Ad esempio se un ordine viene creato e poi annullato, il sistema monolitico non si accorge di nulla, se queste due operazioni avvengono nell'intervallo tra l'esecuzione di una batch e l'altra. 
+\end{itemize}
+Quindi sono state prese alcune responsabilità del vecchio sistema e le si sono spostate in un nuovo sistema (\textit{Velocity}) basato su eventi.
+Altre fuzionalità sono invece state implementate in un nuovo sistema, che attinge da Velocity e svolge le restanti funzioni del \textit{T\&T}.
+Al momento ci sono quindi due sistemi di \textit{T\&T}, uno alimentato da velocity, l'altro completamente indipendente.
+I due sistemi \textit{T\&T} sono sviluppati in \texttt{.NET}, il vecchio è un servizio Windows che gira su un server virtuale, 
+il nuovo è una \texttt{Azure function} (simili alle AWS lambda), che si trova sul cloud Azure ed è in ascolto sui \textit{Kafka topic} su cui opera \textit{Velocity}.
+\\\\
+Velocity presenta una limitazione, lavorando con approccio \textit{Brownfield} deve interfacciarsi con i vecchi sistemi, sia in input che in output.
+L'input arriva dal \textit{TMS} e per renderlo compatibile viene usato \texttt{Debezium} (sezione \ref*{sec:debezium_overview}) in modo da leggere dal suo db.
+In output invece il problema è che \textit{Velocity} non implementa tutte le funzionalità del vecchio sistema, ma solo una parte.
+In particolare la fase finale di comunicazione con i clienti (invio di email, aggiornamento del portale web, etc..) non è implementata in Velocity,
+Quindi \textit{T\&T} (quello alimentato da velocity) è completamente identico al vecchio \textit{T\&T}, ma senza le feature che adesso sono gestite da \textit{Velocity}
 
-\section{Progetto Velocity}
-\label{sec:T&T_new}
-Sistema \textit{Event Driven} basato su \texttt{Kafka Streams}. (sezione \ref{subsubsec:kafka_stream})
+\section{Project Velocity}
+\label{sec:project_velocity}
+Lo scopo del progetto \textit{Velocity} è costruire un \textit{T\&T} il più veloce possibile.
+Prima dell'implementazione ad eventi il tempo necessario alla ricezione da parte del cliente dell'aggiornamento di un'ordine era di 40 minuti.
+In seguito all'introduzione di \textit{Velocity} questo tempo è sceso a 5 minuti, con l'implementazione dell' \texttt{EventExport} \ref{cap:MicroservizioEventExport} l'obbiettivo è portarlo a meno di 3.
+Per rendere possibile ciò Il progetto è completamente ad eventi, basato su \texttt{Apache Kafka} \ref{ch:kafka_overview}. 
+Inoltre per ridurre al minimo la latenza il sistema è costruito su una architettura cloud, che per il momento si appoggia ad \texttt{Azure} ed è pensata apposta per essere scalabile.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/architecture/collocazione_velocity.png}
+    \caption{Collocazione di Velocity}
+    \label{fig:collocazione_velocity_img}
+\end{figure}
+TODO: chiedere a Massimo se è possibile avere la slide.
+l'Immagine \ref{fig:collocazione_velocity_img} è mostrato dove si colloca \textit{Velocity} all'interno del sistema.
+\textit{Velocity} (quello che in nell'immagine vede etichettato come "confluent cloud") lavora con input che arrivano dal \textit{TMS}, cioè con \textbf{Technical Events},
+oppure con input che arrivano dagli autisti dei camion tramte apposita app interna, cioè con \textbf{Business Events}.
+La differenza tra questi due eventi sarà approfondita nella sezione \ref{sec:velocity_streams}.
+
+
+\subsection{Streams usati da Velocity}
+\label{sec:velocity_streams}
+\textit{Velocity} è un sistema \textit{Event Driven} basato su \texttt{Kafka Streams}. (sezione \ref{subsubsec:kafka_stream})
 Quando una entità cambia stato la modifica viene registrata su un \texttt{Kafka Topic} e, successivamente, gli eventi sui Topic vengono analizzati o filtrati tramite \texttt{Kafka Stream}.
 Possiamo distinguere 3 tipologie di \texttt{Kafka Topic}:
 \begin{figure}[H]
