@@ -98,15 +98,55 @@ Possiamo distinguere 3 tipologie di \texttt{Kafka Topic}:
     \label{fig:kafka_topics.img}
 \end{figure}
 \begin{itemize}
-    \item \textbf{Technical Events}: Contengono gli eventi generati dal \textbf{TMS}, sono eventi molto simili a dei log di un database
+    \item \textbf{Technical Events, Technical Topic }: Contengono gli eventi generati dal \textbf{TMS}, sono eventi molto simili a dei log di un database
     (essendo generati tramite \texttt{Debezium} sono sostanzialmente una collezione di operazioni SQL) e spesso sono ridondanti, è
     infatti comune che il sistema effettui operazioni poco efficienti.
     Ad esempio qualora io avessi un ordine con una nota e la volessi modificare il TMS potrebbe svolgere la richiesta segnalando una operazione di \texttt{DELETE} ed una di \texttt{INSERT} piuttosto che effettuare una semplice \texttt{UPDATE}.\\
     É presente un \texttt{Topic} di tipo \textit{Technical Events} per ogni tabella del database originale (quindi un topic ogni dominio).
-    \item \textbf{Domain Events}: Questi Topic contengono gli eventi filtrati dai \textit{Technical Events} tramite i \texttt{Kafka Streams}, non sono più simili a dei log di un DB (già solo la loro struttura è JSON, non SQL) e rappresentano come è fatto un oggetto (ordine di trasporto, viaggio, ...). 
+    \item \textbf{Domain Events, Domain Topic}: Questi Topic contengono gli eventi filtrati dai \textit{Technical Events} tramite i \texttt{Kafka Streams} 
+    e gli eventi generati dai corrieri tramite una applicazione interna ad Arcese.
+    Non sono più simili a dei log di un DB (già solo la loro struttura è JSON, non SQL) e rappresentano come è fatto un oggetto (ordine di trasporto, viaggio, ...). 
     Tutti i potenziali eventi ridondanti sono stati filtrati dallo \textit{Stream}, non vi è più quindi il problema degli eventi ridondanti.
-    \item \textbf{Business Events}: \texttt{Topic} opzionali, contengono degli eventi strutturati come i consumatori si aspettano (Ease of consumption). Sono pensati per fornire una vista specifica per un particolare consumer.
+    \item \textbf{Business Events, Signaling Topic}: \texttt{Topic} opzionali, contengono degli eventi strutturati come i consumatori si aspettano (Ease of consumption).
+    Sono pensati per fornire una vista specifica per un particolare consumer.
 \end{itemize}
+Il lavoro svolto nell'ambito della scrittura di questa tesi è stato principalmente concentrato sui \textit{Business Events}, 
+dato che il resto del sistema era già stato implementato tramite \textit{Kafka Streams}.
+Uno schema generico del funzionamento dei due topic non trattati in seguito si può trovare nella sezione \ref{subsec:components}, insieme all'analisi di due processi
+rilevanti che operano sul \textbf{Fast Storage} (mostrato in figura \ref{fig:collocazione_velocity_img}).
+Invece i \textit{Business Events} sono trattati nel dettaglio in sezione \ref{subsec:business_events}.
+
+\subsection{Business Events e Signaling Topic}
+\label{subsec:business_events}
+Al posto di addossare ad un sistema monolitico la responsabilità di trattare i \textit{Business Event},con le difficoltà che ciò comporterebbe,
+si è scelto di utilizzare un Kafka Topic su cui scrivere i \textit{Business Event}. 
+Il motivo di tale scelta è che i \textit{Business Event} sono molto dipendenti dal consumatore che li leggerà, quindi è meglio fornire una generica interfaccia
+e delegare la responsabilità di trattare gli eventi al consumatore.
+Inoltre questa loro costruzione li rende perfetti per la logica a microservizi, infatti non è così raro che si voglia modificare un consumer, senza la logica a microservizi
+si sarebbe obbligati a cambiare il sistema monolitico per poterlo fare.
+Il \textit{Signaling Topic} è ascoltato da diversi microservizi che possono vedere tutti gli eventi, ma processano solo quelli a cui sono interessati e si preoccupano di inoltrarli ai clienti.
+Un esempio di microservizio che si occupa di inoltrare gli avvisi di tracciamento ai clienti è \texttt{EventExport} (sezione \ref{cap:MicroservizioEventExport}).
+\\\\
+come si può vedere in figura \ref{fig:collocazione_velocity_img} i \textit{Business Events} (che vivono nel \textit{Signaling topic}) sono eventi generati dai \textit{Kafka Streams}.
+I \textit{Domain Events} che vivono sul \textit{Domain Topic}, vengono elaborati attraverso i \textit{Kafka stream} e vengo scritti nel \textit{Fast Storage}.
+Dal fast storage vengono letti ed elaborati da diversi microservizi che arrichiscono ed unificano le informazioni, in seguito vengono scritti nel \textit{Signaling Topic}.
+Ad esempio un oggetto di dominio "consegna" porta con se diversi eventi di business: l'aggiornamento della geolocalizzazione dell'ordine ad esso associato, la notifica dell'avvenuta consegna al cliente, etc ...
+Basandosi su quanto scritto nel \textit{Fast Storage}, che è stato scritto in base ai \textit{Domain Events} precedentemente giunti al \textit{Domain Topic},
+i microservizi che osservano il \textit{Fast Storage} generano \textit{Business Events}.
+\\\\
+Dato che i consumer che ascoltano il \textit{Signaling Topic} ma processano solo gli eventi a cui sono interessati, 
+i Business Events devono essere strutturati in maniera da permettere ai vari consumer di decidere se l'evento è di loro interesse o meno.
+Questi eventi perciò contengono 3 principali informazioni:
+\begin{itemize}
+\item tipo di evento: spedizione, ritiro, viaggio, disposizione o ordine FTL (Full Truck Load)
+\item quali oggetti nel datamodel sono stati modificati.
+Ciò corrisponde a speficare quali tabelle all'interno del \textit{Fast Storage} sono state interessate dal \textit{Domain Event}.
+\item quali "campi sensibili" sono stati modificati.
+I campi sensibili sono quei campi che, se modificati, possono interessare il consumer dell'evento.
+Ad esempio, se un ordine cambia data di consegna, il consumer (ed il cliente) potrebbero essere molto interessati a questa informazione.
+\end{itemize}
+
+
 
 \subsection{Componenti}
 \label{subsec:components}
