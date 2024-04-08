@@ -49,6 +49,8 @@ L'idea era smontare il vecchio sistema monolitico e renderlo basato su microserv
 I vantaggi di creare un sistema orientato ad eventi sono due:
 - il sistema reagisce prontamente agli eventi, senza dover aspettare che un batch venga eseguito.
 - il sistema intercetta tutti gli eventi, anche quelli intermedi. Ad esempio se un ordine viene creato e poi annullato, il sistema monolitico non si accorge di nulla, se queste due operazioni avvengono nell'intervallo tra l'esecuzione di una batch e l'altra. 
+Quindi sono state prese alcune funzioni del vecchio sistema e le si sono spostate in un nuovo sistema (Velocity) basato su eventi.
+Altre fuzionalità sono invece rimaste in un'altro sistema, che attinge da Velocity e svolge le restanti funzioni del T&T.
 
 Velocity presenta una limitazione, deve interfacciarsi con i vecchio sistemi, sia in input che in output.
 L'input arriva dal sistema TMS e viene quindi usato Debezium per leggere dal suo db.
@@ -57,5 +59,7 @@ In particolare la fase finale di comunicazione con i clienti (invio di email, ag
 per questo come affermavo prima ci sono due sistemi di T&T, uno alimentato da velocity, l'altro completamente indipendente.
 Il nuovo T&T (quello alimentato da velocity) è completamente identico al vecchio T&T, ma senza le feature che adesso sono gestite da Velocity
 perciò si aspetta di trovare i dati in un certo modo, quindi Velocity deve essere in grado di scrivere i dati nello stesso modo in cui li scriveva il vecchio sistema. Ciò viene risolto con diverse operazioni di mapping implementate nei Kafka Streams e nei vari microservizi.  
+
+I due sistemi T&T sono sviluppati i .NET, il vecchio è un servizio windows che gira su un server virtuale, il nuovo è una Azure function (simili alle AWS lambda), quindi su cloud in ascolto sui topic di Kafka.
 # lo aggiungo o no? 
 c'è tutto un capitolo che potrei scrivere riguardo a Quartz, al problema della consistenza ed al punctator. Ma sinceramente mi sembra ci sia già abbastanza roba nella tesi. Magari si può aggiungere solo nella tesi cartacea.
