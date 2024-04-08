@@ -35,7 +35,7 @@ Questi eventi perciò contengono 3 principali informazioni:
 
 Aggiungere alla tesi nel capitolo di Event Export dove questo microservizio si posiziona all'interno del sistema (cioè legge dal signaling topic e dal fast storage e scrive sul fast storage (ed invia le mail)).
 
-# vecchio T&T
+# vecchio T&T (fatto)
 Lo scopo del sistema di T&T è quello di fornire al cliente tracciabilità sugli ordini da lui effettuati.
 
 Al momento ci sono due sistemi di T&T, uno alimentato da velocity, l'altro completamente indipendente.
