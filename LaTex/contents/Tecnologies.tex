@@ -207,13 +207,13 @@ Legato al concetto di finestra temporale è il concetto di \textit{Watermark}, u
 Nascono dalla necessità di misurare il tempo quando si lavora con \textit{finestre temporali} dato che l'operatore \textit{finestra} ha bisogno di essere notificato
 quando è passato più tempo di quanto specificato ed è ora che la finestra si chiuda (non accetti più eventi) ed inizi la computazione.\\\\
 I \textit{watermarks} vengono gestiti da \textit{Flink} come se fossero normali eventi, sono inseriti all'interno del flusso di eventi e contengono un timestamp \textit{t}.
-quando il \textit{Watermark} con timestamp $t$ raggiunge l'operatore finestra l'assunzione implicita è che non ci dovrebbero più arrivare elementi con timestamp $t'$ tali per cui $t' \leq t$.
+quando il \textit{Watermark} con timestamp $t$ raggiunge l'operatore finestra l'assunzione implicita è che non dovrebbero più arrivare elementi con timestamp $t'$ tali per cui $t' \leq t$.
 Cioè eventi verificatisi "prima" del tempo $t$ del \textit{watermark}.
 Questo strumento non sembra molto utile finché si considerano flussi di dati ordinati ma diventa fondamentale se il flusso su cui stiamo operando presenta eventi
 non ordinati (rispetto al timestamp).
 Situazione che si verifica di frequente quando si ha a che fare con sistemi complessi e distribuiti dove non è garantito che gli eventi 
 giungano al sistema di elaborazione mantenendo l'ordine con cui sono avvenuti.
-Un esempio di flusso con eventi non ordinati ed il relativo uso dei \textit{watermarks} è mostrato nella figura \ref{fig:watermark}\\\\
+Un esempio di flusso con eventi non ordinati ed il relativo uso dei \textit{watermarks} è mostrato nella figura \ref{fig:watermark}
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/flink/watermark_out_of_order.png}
@@ -234,13 +234,13 @@ ma non è limitato a ciò, può essere eseguito anche in un ambiente \textit{sta
     \caption{Flink Cluster}
     \label{fig:flink_cluster}
 \end{figure}
-\\Il \textit{runtime environment} di Flink è composto da due tipi di processi: i JobManager ed i TaskManager.
+\\Il \textit{runtime environment} di Flink è composto da due tipi di processi: i \textbf{JobManager} ed i \textbf{TaskManager}.
 \begin{itemize}
     \item \textbf{JobManager}: è il master del \textit{Cluster}, si occupa di coordinare il lavoro dei \textit{TaskManager} decidendo quando eseguire un Task,
     gestire gli errori in fase di esecuzione ed effettuare checkpointing 
     \footnote{Il meccanismo di checkpoint è una strategia di \textit{fault tolerance} basata sul mantenere degli snapshots di vari componenti del sistema
     per poterlo ripristinare in caso di guasto}.
-    Le principali responsabilità del \textit{JobManager} sono due: la gestione delle risorse e la gestione dei job.
+    Le principali responsabilità del \textit{JobManager} sono due: la gestione delle risorse e la gestione dei jobs.
     \begin{enumerate}
         \item \textbf{Gestione delle risorse}: il \textit{JobManager} gestisce i \textbf{Task Slots} (sezione \ref{subsubsec:flink_Task_slots}) dei \textit{TaskManager}, cioè le risorse computazionali.
         Se l'ambiente di esecuzione è distribuito (come ad esempio \textit{YARN} o \textit{Kubernetes}) il \textit{JobManager} può richiedere di avviare nuove istanze di \textit{TaskManager} in base alle necessità.
@@ -249,14 +249,14 @@ ma non è limitato a ciò, può essere eseguito anche in un ambiente \textit{sta
     \end{enumerate}
     C'è sempre almeno un \textit{JobManager}. Una configurazione \textit{Hig-Availability} potrebbe avere più \textit{JobManager}, di cui uno è sempre il leader e gli altri sono in standby.
     \item \textbf{TaskManager}: sono i worker del \textit{Cluster}, si occupano di eseguire i Task e di ricevere e inviare i dati.
-    La più piccola unità di esecuzione in un TaskManager è un \textbf{Task Slots} (sezione \ref{subsubsec:flink_Task_slots}).
-    Il numero di slot di Task in un TaskManager indica il numero di Task eseguibili in parallelo.
+    La più piccola unità di esecuzione in un \textit{TaskManager} è un \textbf{Task Slots} (sezione \ref{subsubsec:flink_Task_slots}).
+    Il numero di slot di Task in un \textit{TaskManager} indica il numero di Task eseguibili in parallelo.
 \end{itemize}
 
 \subsubsection{Task Slots}
 \label{subsubsec:flink_Task_slots}
 Per comprendere il concetto di \textit{Task Slot} è necessario comprendere come viene gestito il \textit{parallelismo} in \texttt{Flink}.    
-Un programma scritto tramite l'API di \texttt{Flink} non viene eseguito sequenzialmente, ma viene diviso in sotto-processi che possono essere eseguiti in parallelo.
+Un programma scritto tramite l'API di \texttt{Flink} non viene eseguito sequenzialmente, ma viene diviso in sotto-processi (detti \texttt{operatori}) che possono essere eseguiti in parallelo.
 Ad esempio un semplice programma che riceve dei dati, li filtra e li salva su un database potrebbe essere diviso in tre : ricezione, filtro e scrittura.
 Questi tre sotto-processi sono chiamati \textit{Task} e possono essere, parzialmente, eseguiti in parallelo.\\
 Inoltre, come anticipato nella sezione \ref{subsec:flink_statefull_processing}, una operazione di \texttt{KeyBy()} suddivide uno stream in partizioni di dati
@@ -284,7 +284,7 @@ Come si può vedere nell'immagine \ref{fig:flink_slots} dove i \texttt{Task} \te
 Alternativamente alla \textit{DataStream API}, presentata in sezione \ref{subsec:datastream_api}, è possibile utilizzare la \textit{Table API}
  per scrivere programmi ed eseguirli su \textit{Apache Flink}.
 La \textit{Table API} è un'API di alto livello per \textit{Flink} che permette di scrivere query SQL-like per elaborare i dati.
-Le query scritte in un linguaggio SQL-like e vengono tradotte in \texttt{operatori}, 
+Le query scritte in un linguaggio SQL-like e vengono tradotte in \texttt{operatori} (già visti nella sezione \ref{subsubsec:flink_Task_slots}), 
 allo stesso modo di come avviene con i programmi scritti tramite la \textit{DataStream API}.
 L'unica differenza è quindi la sintassi con cui ci si interfaccia con il motore di esecuzione, a livello di esecuzione non ci sono differenze.
 In questo progetto non è stata utilizzata la \textit{Table API}, in parte perché non necessaria (il resto del sistema è \textit{stream-oriented}) ed in parte
@@ -297,8 +297,7 @@ ho ritenuto necessario parlarne brevemente per completezza.
 \texttt{Apache Avro} è un sistema di serializzazione di dati, simile a \texttt{JSON} o \texttt{XML}, ma con un formato binario.
 La sua caratteristica principale è la possibilità di definire uno \textit{schema} per i dati, che viene poi utilizzato per la serializzazione e deserializzazione.
 Questo \textit{schema} può accompagnare i dati serializzati, permettendo al sistema una ricostruzione dei dati dinamica anche senza conoscere a priori il tipo di dato,
-oppure può essere salvato in un file separato e condiviso tra i vari sistemi che devono scambiarsi i dati.\\\\
-
+oppure può essere salvato in un file separato e condiviso tra i vari sistemi che devono scambiarsi i dati.
 Un oggetto \texttt{Avro} è quindi composto da due parti: 
 \begin{itemize}
     \item Un header dove si possono trovare diversi metadati e lo \textit{schema}, definito in JSON.
@@ -310,7 +309,7 @@ Se ad esempio ci fosse la necessità di scrivere un file \texttt{Avro} su disco,
 in modo che chiunque lo legga possa ricostruire i dati.\\
 Se invece si usa \textit{Avro} in RPC (\textit{Remote Procedure Call}) non conviene includere lo \textit{schema} in ogni messaggio,
 dato che sarebbe ridondante e aumenterebbe inutilmente la dimensione dei messaggi.
-In questo caso il client ed il server si scambierebbero lo \textit{schema} una sola volta, durante la fase di handshake.
+In questo caso la prassi è che client e server si scambino lo \textit{schema} una sola volta, durante la fase di handshake.
 
 \subsection{Hybernate JPA}
 \label{subsec:hibernate_overview}
@@ -318,6 +317,6 @@ In questo caso il client ed il server si scambierebbero lo \textit{schema} una s
 \textbf{ORM} è il processo di mappatura delle classi di un programma Java con le tabelle di un database relazionale.
 In particolare \texttt{Hibernate} fornisce una implementazione di \textit{JPA}, permettendo di interagire con un database relazionale senza dover scrivere codice SQL.
 L'utilizzo più comune di \textit{Hibernate JPA} è quello di implementare un \textit{Repository Pattern}, cioè una classe che si occupa di interagire con il database e di eseguire le query.
-Un Repository class incapsula tutto il codice associato alla persistenza, escludendo però qualsiasi logica di business. 
+Una \texttt{Repository Class} incapsula tutto il codice associato alla persistenza, escludendo però qualsiasi logica di business. 
 Offre metodi per l'inserimento, l'aggiornamento e la rimozione di entità nel database, oltre a metodi per la creazione ed esecuzione di query specifiche.
-L'intento di questo modello è di disaccoppiare il codice di persistenza dal codice di business, migliorando così la riusabilità del codice di persistenza.\\\\
+L'intento di questo modello è di disaccoppiare il codice di persistenza dal codice di business, migliorando così la riusabilità del codice di persistenza.

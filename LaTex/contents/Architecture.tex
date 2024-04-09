@@ -42,29 +42,33 @@ Lo scopo del sistema di \textbf{Track \& Trace}  è quello di fornire al cliente
 Ciò può risultare di limitata importanza se si pensa ad un cliente finale, ma quando si tratta di un cliente business,
 che potrebbe necessitare di consegne per iniziare o proseguire lavorazioni, la tracciabilità diventa un requisito fondamentale.
 Il \textbf{T\&T} è una funzionalità già presente nel \textit{TMS}, però questi non genera tutti gli eventi che servono,
-nasce quindi la necessità di avere un software che calcoli questi eventi mancanti, partendo da quelli che il TMS genera e da eventuali fonti esterne (ad esempio le comunicazioni con i camion). 
-Esempio concreto: il TMS genera gli eventi "ordine creato" e "camion partito", ma non genera l'evento "ordine spedito". 
+nasce quindi la necessità di avere un software che calcoli questi eventi mancanti, partendo da quelli che il \textit{TMS} genera e da eventuali fonti esterne (ad esempio le comunicazioni con i camion). 
+Esempio concreto: il \textit{TMS} genera gli eventi "ordine creato" e "camion partito", ma non genera l'evento "ordine spedito". 
 Andando ad analizzare quali sono gli ordini che sono stati caricati sul camion, il \textit{T\&T} è in grado di generare l'evento "ordine spedito" per ognuno di essi.
 \\\\
 Il \textbf{Track \& Trace legacy} è un software monolitico che gestisce tutto, dalle modifiche agli oggetti di business alla comunicazione con il cliente, basato su batching e non orientato ad eventi.
 Essendo un sistema basato su Batch, a regolari intervalli di tempo va a vedere il nuovo stato delle entità ed aggiorna un suo database interno di oggetti composti.
 L'idea alla base della migrazione in microservizi è quindi quella di partizionare il vecchio sistema monolitico e renderlo basato su microservizi ed ad eventi.
+\footnote{La programmazione ad eventi è un paradigma basato sulla reazione del sistema ad un input esterno (detto evento). 
+Al posto di venire eseguito in maniera sequenziale un programma ad eventi "reagisce" quando rileva un evento andando ad eseguire operazioni differenti in base alla natura dello stesso.
+Come esempio di un sistema ad eventi si rimanda alla sezione riguardante \texttt{Kafka} \ref{ch:kafka_overview}.}
 I vantaggi di creare un sistema orientato ad eventi sono due:
 \begin{itemize}
     \item Il sistema reagisce prontamente agli eventi, senza dover aspettare che un batch venga eseguito.
     \item Il sistema intercetta tutti gli eventi, anche quelli intermedi. Ad esempio se un ordine viene creato e poi annullato, il sistema monolitico non si accorge di nulla, se queste due operazioni avvengono nell'intervallo tra l'esecuzione di una batch e l'altra. 
 \end{itemize}
 Quindi sono state prese alcune responsabilità del vecchio sistema e le si sono spostate in un nuovo sistema (\textit{Velocity}) basato su eventi.
-Altre funzionalità sono invece state implementate in un nuovo sistema, che attinge da Velocity e svolge le restanti funzioni del \textit{T\&T}.
-Al momento ci sono quindi due sistemi di \textit{T\&T}, uno alimentato da velocity, l'altro completamente indipendente.
+Altre funzionalità sono invece state implementate in un nuovo sistema, che attinge da \textit{Velocity} e svolge le restanti funzioni del \textit{T\&T}.
+Al momento ci sono quindi due sistemi di \textit{T\&T}, uno alimentato da \textit{Velocity}, l'altro completamente indipendente.
 I due sistemi \textit{T\&T} sono sviluppati in \texttt{.NET}, il vecchio è un servizio Windows che gira su un server virtuale, 
 il nuovo è una \texttt{Azure function} (simili alle AWS lambda), che si trova sul cloud Azure ed è in ascolto sui \textit{Kafka topic} su cui opera \textit{Velocity}.
 \\\\
 Velocity presenta una limitazione, lavorando con approccio \textit{Brownfield} deve interfacciarsi con i vecchi sistemi, sia in input che in output.
-L'input arriva dal \textit{TMS} e per renderlo compatibile viene usato \texttt{Debezium} (sezione \ref*{sec:debezium_overview}) in modo da leggere dal suo db.
+L'input arriva dal \textit{TMS} e per renderlo compatibile viene usato \texttt{Debezium} (sezione \ref{sec:debezium_overview}), generando un flusso di eventi.
 In output invece il problema è che \textit{Velocity} non implementa tutte le funzionalità del vecchio sistema, ma solo una parte.
 In particolare la fase finale di comunicazione con i clienti (invio di email, aggiornamento del portale web, etc..) non è implementata in Velocity,
-Quindi \textit{T\&T} (quello alimentato da velocity) è completamente identico al vecchio \textit{T\&T}, ma senza le feature che adesso sono gestite da \textit{Velocity}
+perciò il \textit{T\&T} (quello alimentato da velocity) deve implementare tutte le restanti funzioni.
+In sostanza il nuovo \textit{T\&T} è completamente identico a quello vecchio, ma senza le feature che adesso sono gestite da \textit{Velocity}.
 
 \section{Project Velocity}
 \label{sec:project_velocity}
@@ -74,16 +78,16 @@ Quindi \textit{T\&T} (quello alimentato da velocity) è completamente identico a
     \caption{Collocazione di Velocity}
     \label{fig:collocazione_velocity_img}
 \end{figure}
-Lo scopo del progetto \textit{Velocity} è costruire un \textit{T\&T} il più veloce possibile.
+Lo scopo del progetto \textit{Velocity} è costruire un \textit{T\&T} il più reattivo possibile.
 Prima dell'implementazione ad eventi il tempo necessario alla ricezione da parte del cliente dell'aggiornamento di un'ordine era di 40 minuti.
-In seguito all'introduzione di \textit{Velocity} questo tempo è sceso a 5 minuti, con l'implementazione dell' \texttt{EventExport} \ref{cap:MicroservizioEventExport} l'obbiettivo è portarlo a meno di 3.
-Per rendere possibile ciò Il progetto è completamente ad eventi, basato su \texttt{Apache Kafka} \ref{ch:kafka_overview}. 
-Inoltre per ridurre al minimo la latenza il sistema è costruito su una architettura cloud, che per il momento si appoggia ad \texttt{Azure} ed è pensata apposta per essere scalabile.
+In seguito all'introduzione di \textit{Velocity} questo tempo è sceso a 5 minuti, 
+con l'implementazione dell' \texttt{EventExport} (sezione \ref{cap:MicroservizioEventExport}) l'obbiettivo è portarlo a meno di 3 minuti.
+Per rendere possibile ciò il progetto è completamente orientato ad eventi, basato su \texttt{Apache Kafka} \ref{ch:kafka_overview}. 
+Inoltre per ridurre al minimo la latenza il sistema è costruito tramite una architettura cloud, che per il momento si appoggia ad \texttt{Azure} ed è pensata apposta per essere scalabile.
 L'Immagine \ref{fig:collocazione_velocity_img} mostra dove si colloca \textit{Velocity} all'interno del sistema.
-\textit{Velocity} (quello che in nell'immagine vede etichettato come "confluent cloud") lavora con input che arrivano dal \textit{TMS}, cioè con \textbf{Technical Events},
+\textit{Kakfa} (quello che in nell'immagine vede etichettato come "confluent cloud") lavora con input che arrivano dal \textit{TMS}, cioè con \textbf{Technical Events},
 oppure con input che arrivano dagli autisti dei camion tramite apposita app interna, cioè con \textbf{Business Events}.
 La differenza tra questi due eventi sarà approfondita nella sezione \ref{sec:velocity_streams}.
-
 
 \subsection{Streams usati da Velocity}
 \label{sec:velocity_streams}
@@ -117,29 +121,29 @@ Invece i \textit{Business Events} sono trattati nel dettaglio in sezione \ref{su
 
 \subsection{Business Events e Signaling Topic}
 \label{subsec:business_events}
-Al posto di addossare ad un sistema monolitico la responsabilità di trattare i \textit{Business Event},con le difficoltà che ciò comporterebbe,
-si è scelto di utilizzare un Kafka Topic su cui scrivere i \textit{Business Event}. 
+Al posto di addossare ad un sistema monolitico la responsabilità di trattare i \textit{Business Event}, con le difficoltà che ciò comporterebbe,
+si è scelto di scriverli su un Kafka Topic. 
 Il motivo di tale scelta è che i \textit{Business Event} sono molto dipendenti dal consumatore che li leggerà, quindi è meglio fornire una generica interfaccia
 e delegare la responsabilità di trattare gli eventi al consumatore.
 Inoltre questa loro costruzione li rende perfetti per la logica a microservizi, infatti non è così raro che si voglia modificare un consumer, senza la logica a microservizi
 si sarebbe obbligati a cambiare il sistema monolitico per poterlo fare.
-Il \textit{Signaling Topic} è ascoltato da diversi microservizi che possono vedere tutti gli eventi, ma processano solo quelli a cui sono interessati e si preoccupano di inoltrarli ai clienti.
-Un esempio di microservizio che si occupa di inoltrare gli avvisi di tracciamento ai clienti è \texttt{EventExport} (sezione \ref{cap:MicroservizioEventExport}).
+Il \textit{Signaling Topic} è ascoltato da diversi microservizi che possono vedere tutti gli eventi, ma processano solo quelli a cui sono interessati.
+Un esempio di microservizio che si occupa di processare e successivamente inoltrare gli avvisi di tracciamento ai clienti è \texttt{EventExport} (sezione \ref{cap:MicroservizioEventExport}).
 \\\\
-come si può vedere in figura \ref{fig:collocazione_velocity_img} i \textit{Business Events} (che vivono nel \textit{Signaling topic}) sono eventi generati dai \textit{Kafka Streams}.
-I \textit{Domain Events} che vivono sul \textit{Domain Topic}, vengono elaborati attraverso i \textit{Kafka stream} e vengo scritti nel \textit{Fast Storage}.
-Dal fast storage vengono letti ed elaborati da diversi microservizi che arricchiscono ed unificano le informazioni, in seguito vengono scritti nel \textit{Signaling Topic}.
-Ad esempio un oggetto di dominio "consegna" porta con se diversi eventi di business: l'aggiornamento della geolocalizzazione dell'ordine ad esso associato, la notifica dell'avvenuta consegna al cliente, etc ...
-Basandosi su quanto scritto nel \textit{Fast Storage}, che è stato scritto in base ai \textit{Domain Events} precedentemente giunti al \textit{Domain Topic},
-i microservizi che osservano il \textit{Fast Storage} generano \textit{Business Events}.
+Come si può vedere in figura \ref{fig:collocazione_velocity_img} i \texttt{Business Events} (che vivono nel \textit{Signaling topic}) sono eventi generati dai \textit{Kafka Streams}.
+I \texttt{Domain Events} che vivono sul \textit{Domain Topic}, vengono elaborati attraverso i \textit{Kafka stream} e vengo scritti nel \texttt{Fast Storage}.
+Dal \texttt{Fast Storage} questi oggetti vengono letti ed elaborati da diversi microservizi che arricchiscono ed unificano le informazioni ed in seguito vengono scritti nel \textit{Signaling Topic}.
+Ad esempio un oggetto di dominio "consegna" porta con se diversi eventi di business: l'aggiornamento della geolocalizzazione dell'ordine ad esso associato, la notifica dell'avvenuta consegna al cliente, etc ...\\
+Basandosi su quanto scritto nel \texttt{Fast Storage}, che è stato scritto in base ai \texttt{Domain Events} precedentemente giunti al \textit{Domain Topic},
+i microservizi che osservano il \texttt{Fast Storage} generano \texttt{Business Events}.
 \\\\
 Dato che i consumer che ascoltano il \textit{Signaling Topic} ma processano solo gli eventi a cui sono interessati, 
-i Business Events devono essere strutturati in maniera da permettere ai vari consumer di decidere se l'evento è di loro interesse o meno.
+i \texttt{Business Events} devono essere strutturati in maniera da permettere ai vari consumer di decidere se l'evento è di loro interesse o meno.
 Questi eventi perciò contengono 3 principali informazioni:
 \begin{itemize}
 \item tipo di evento: spedizione, ritiro, viaggio, disposizione o ordine FTL (Full Truck Load)
 \item quali oggetti nel datamodel sono stati modificati.
-Ciò corrisponde a specificare quali tabelle all'interno del \textit{Fast Storage} sono state interessate dal \textit{Domain Event}.
+Ciò corrisponde a specificare quali tabelle all'interno del \textit{Fast Storage} sono state interessate dal \texttt{Domain Event}.
 \item quali "campi sensibili" sono stati modificati.
 I campi sensibili sono quei campi che, se modificati, possono interessare il consumer dell'evento.
 Ad esempio, se un ordine cambia data di consegna, il consumer (ed il cliente) potrebbero essere molto interessati a questa informazione.
@@ -154,12 +158,12 @@ Ad esempio, se un ordine cambia data di consegna, il consumer (ed il cliente) po
 \label{subsubsec:kafka_stream}
 \texttt{Kafka Streams} è una API per processare eventi su un \texttt{Topic Kafka} (filtrare, trasformare, aggregare, ...), questo tema viene approfondito nella sezione \ref{subsec:kafka_streams}\\
 \\
-Gli \texttt{Stream} che collegano i \texttt{Topic} di tipo \textit{Domain Events} a quelli di tipo \textit{Domain Business Event} sono molto dipendenti dalle necessità del consumatore che poi li leggerà quindi non seguono una struttura fissa.
-Invece gli \texttt{Stream} che leggono dai \textit{Technical Events Topic} seguono una struttura precisa e svolgono operazioni suddivisibili in 3 fasi:
+Gli \texttt{Stream} che collegano i \texttt{Topic} di tipo \textit{Domain Events} a quelli di tipo \textit{Business Event} sono molto dipendenti dalle necessità del consumatore che poi li leggerà quindi non seguono una struttura fissa.
+Invece gli \texttt{Stream} che leggono dai \textit{Technical Topic} e scrivono sul \textit{Domain Topic} seguono una struttura precisa e svolgono operazioni suddivisibili in 3 fasi:
 \begin{enumerate}
     \item \textbf{Fase di Casting}.\\
     In questa fase avviene la ricostruzione dell'evento basandosi sui log generati da \texttt{Debezium} che sta osservando il \textbf{TMS}.\\
-    \texttt{Debezium} si occupa di rilevare ogni cambiamento e pubblica l'evento su diversi topic kafka, uno per tabella (quindi uno per ogni dominio). 
+    \texttt{Debezium} si occupa di rilevare ogni cambiamento e pubblica l'evento su diversi \textit{Kafka Topic} , uno per tabella (quindi uno per ogni dominio). 
     \item \textbf{Fase di Filtro}\\
     Successivamente gli eventi ridondanti devono essere eliminati. Tutti gli eventi relativi ad una transazione vengono accorpati e viene generato un unico evento risultante, che non riporta gli eventi intermedi. 
     \item \textbf{Fase di Mapping}\\
@@ -181,7 +185,7 @@ A questo punto vengono eseguiti i vari \textit{Jobs}, uno per ogni \textit{chunk
 \begin{enumerate}
     \item \textbf{Reading}: Durante la fase di \textit{Reading} vengono recuperati dal Fast Storage tutti gli Eventi di Dominio che sono stati assegnati dal Partizionatore a quello specifico \textit{chunk}.
     \item \textbf{Processing}: Fase in cui si trasformano gli Eventi di Dominio recuperati durante la fase di \textit{Reading} in una serie di record pronti alla scrittura, ovvero in una serie di oggetti di tipo \texttt{Entity}.
-    Le \textit{Entità} andranno quindi a comporre degli oggetti di vario tipo, infatti \texttt{MicroBatch} non si occupa di tenere aggiornata una sola tabella, bensì diverse tabelle sullo stesso database. \todo{quando avro accesso al DB potrò inserire questi esempi}
+    Le \textit{Entità} andranno quindi a comporre degli oggetti di vario tipo, infatti \texttt{MicroBatch} non si occupa di tenere aggiornata una sola tabella, bensì diverse tabelle sullo stesso database.
     Quindi partendo dagli stessi Eventi di Dominio verranno generati diversi record (diverse \texttt{Entity}) che verranno scritti su diverse tabelle.
     \item \textbf{Writing}:Fase finale di scrittura sul Fast Storage. É una scrittura transazionale, quindi deve rispettare le proprietà \texttt{ACID}, requisito di cui si occupa il \textit{Job}.
     Inoltre il \textit{Job} si occupa di verificare per ciascuna tabella se i dati che ha generato devono essere inseriti o solamente aggiornati.
