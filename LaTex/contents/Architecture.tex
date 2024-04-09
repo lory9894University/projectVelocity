@@ -68,19 +68,18 @@ Quindi \textit{T\&T} (quello alimentato da velocity) è completamente identico a
 
 \section{Project Velocity}
 \label{sec:project_velocity}
-Lo scopo del progetto \textit{Velocity} è costruire un \textit{T\&T} il più veloce possibile.
-Prima dell'implementazione ad eventi il tempo necessario alla ricezione da parte del cliente dell'aggiornamento di un'ordine era di 40 minuti.
-In seguito all'introduzione di \textit{Velocity} questo tempo è sceso a 5 minuti, con l'implementazione dell' \texttt{EventExport} \ref{cap:MicroservizioEventExport} l'obbiettivo è portarlo a meno di 3.
-Per rendere possibile ciò Il progetto è completamente ad eventi, basato su \texttt{Apache Kafka} \ref{ch:kafka_overview}. 
-Inoltre per ridurre al minimo la latenza il sistema è costruito su una architettura cloud, che per il momento si appoggia ad \texttt{Azure} ed è pensata apposta per essere scalabile.
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{images/architecture/collocazione_velocity.png}
     \caption{Collocazione di Velocity}
     \label{fig:collocazione_velocity_img}
 \end{figure}
-TODO: chiedere a Massimo se è possibile avere la slide.
-l'Immagine \ref{fig:collocazione_velocity_img} è mostrato dove si colloca \textit{Velocity} all'interno del sistema.
+Lo scopo del progetto \textit{Velocity} è costruire un \textit{T\&T} il più veloce possibile.
+Prima dell'implementazione ad eventi il tempo necessario alla ricezione da parte del cliente dell'aggiornamento di un'ordine era di 40 minuti.
+In seguito all'introduzione di \textit{Velocity} questo tempo è sceso a 5 minuti, con l'implementazione dell' \texttt{EventExport} \ref{cap:MicroservizioEventExport} l'obbiettivo è portarlo a meno di 3.
+Per rendere possibile ciò Il progetto è completamente ad eventi, basato su \texttt{Apache Kafka} \ref{ch:kafka_overview}. 
+Inoltre per ridurre al minimo la latenza il sistema è costruito su una architettura cloud, che per il momento si appoggia ad \texttt{Azure} ed è pensata apposta per essere scalabile.
+L'Immagine \ref{fig:collocazione_velocity_img} mostra dove si colloca \textit{Velocity} all'interno del sistema.
 \textit{Velocity} (quello che in nell'immagine vede etichettato come "confluent cloud") lavora con input che arrivano dal \textit{TMS}, cioè con \textbf{Technical Events},
 oppure con input che arrivano dagli autisti dei camion tramte apposita app interna, cioè con \textbf{Business Events}.
 La differenza tra questi due eventi sarà approfondita nella sezione \ref{sec:velocity_streams}.
