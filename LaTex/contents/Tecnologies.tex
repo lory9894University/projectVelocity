@@ -29,11 +29,11 @@ Un \texttt{Cluster} di esempio è mostrato in figura \ref{fig:kafka_cluster}
     \caption{Kafka Cluster}
     \label{fig:kafka_cluster}
 \end{figure}
-\\\texttt{Kafka} è pensato per essere scalabile, fault-tollerant e ad alte prestazioni.
+\\\texttt{Kafka} è pensato per essere scalabile, fault-tolerant e ad alte prestazioni.
 É scalabile in quanto è possibile aggiungere o rimuovere \texttt{Brokers} in modo dinamico, senza interrompere il servizio.
-É fault-tollerant in quanto è possibile configurare repliche dei \textit{Brokers} in modo da garantire che i dati siano sempre disponibili, anche in caso di guasto di un \texttt{Broker}.
+É fault-tolerant in quanto è possibile configurare repliche dei \textit{Brokers} in modo da garantire che i dati siano sempre disponibili, anche in caso di guasto di un \texttt{Broker}.
 Ed infine è ad alte prestazioni in quanto la responsabilità di ogni \texttt{Broker} è limitata, cioè ogni \texttt{Broker} si occupa solo di un sottoinsieme dei \textit{Topic} presenti nel \texttt{Cluster}, 
-permettendo di distribuire sia il carico computazionale si il carico di rete, di modo che nessun \texttt{Broker} sia sovraccaricato.
+permettendo di distribuire sia il carico computazionale sia il carico di rete, di modo che nessun \texttt{Broker} sia sovraccaricato.
 % dovrei citare la fonte della figura https://www.scaler.com/topics/kafka-cluster/
 
 \subsection{Topic}
@@ -41,11 +41,11 @@ permettendo di distribuire sia il carico computazionale si il carico di rete, di
 Un \textit{Kafka Topic} è un database ad eventi, al posto di pensare in termini di oggetti, si pensa in termini di eventi.
 Diversi microservizi possono consumare o pubblicare sullo stesso \textit{Topic}, similmente ad un \texttt{Message Broker} infatti i \textit{Topic} sono \textit{multi-producer} e \textit{multi-subscribers}.
 A differenza di un \texttt{Message Broker} però un \textit{Topic} può mantenere dei record in maniera sicura per una durata di tempo indefinita, come se fosse un database.
-Gli \textbf{Eventi} infatti non sono eliminati dopo esser stati letti da un \textit{Consumer}, anzi, non è nemmeno possibile eliminarli manualmente.
+Gli \textbf{Eventi} infatti non sono eliminati dopo esser stati letti da un \textit{Consumer}, anzi, non è nemmeno possibile eliminarli manualmente, l'unico modo per rimuovere un record è aspettare che il tempo di mantenimento del record scada.
 Il tempo di mantenimento di un record può essere configurato in modo da stabilire un equilibrio tra quantità di dati salvati e efficienza delle elaborazioni, dato che ad un numero maggiore di record corrisponde un tempo di elaborazione maggiore.\\\\
-I \textit{Topic} sono partizionati per permettere high-availability, fault-tollerance e soprattutto consentire la lettura/scrittura in parallelo.
+I \textit{Topic} sono partizionati per permettere high-availability, fault-tolerance e soprattutto consentire la lettura/scrittura in parallelo.
 Infatti ogni \textit{Topic} è distribuito tra vari \textit{buckets}, che si trovano nei \texttt{Kafka Brokers}.
-Eventi definita dalla stessa \textit{Key} sono scritti nella stessa partizione e \textit{Kafka} garantisce che qualsiasi \textit{Consumer} iscritto a tale partizione leggerà gli eventi nello stesso ordine in cui sono stati scritti.
+Eventi definiti dalla stessa \textit{Key} sono scritti nella stessa partizione e \texttt{Kafka} garantisce che qualsiasi \textit{Consumer} iscritto a tale partizione leggerà gli eventi nello stesso ordine in cui sono stati scritti.
 Come citato prima il partizionamento permette anche la scrittura in parallelo, infatti se la partizione su cui due \textit{Producer} scrivono è differente e possibile effettuare l'operazione senza doversi preoccupare dei problemi generati dalla scrittura concorrente, anche se il \textit{Topic} è il medesimo.
 Un esempio di partizionamento è mostrato in figura \ref{fig:kafka_topic}
 \begin{figure}[htbp]
@@ -58,24 +58,24 @@ Un esempio di partizionamento è mostrato in figura \ref{fig:kafka_topic}
 
 \subsection{Brokers}
 \label{subsec:kafka_brokers}
-A differenza degli altri \textit{message broker} Kafka è molto improntato sulla scalabilità, per permettere ciò i  messaggi non vengono gestiti da un unico serivizio,
-bensi da un insieme di servizi indipendanti detti \textbf{Brokers}. Questo gruppo di \textit{Brokers} che lavorano insieme costituisce un \textit{Kafka Cluster}.
+A differenza degli altri \textit{message broker} Kafka è molto improntato sulla scalabilità, per permettere ciò i  messaggi non vengono gestiti da un unico servizio,
+bensi da un insieme di servizi indipendenti detti \textbf{Brokers}. Questo gruppo di \textit{Brokers} che lavorano insieme costituisce un \textit{Kafka Cluster}.
 Questo oltre a garantire una maggiore affidabilità (se un broker smette di funzionare non si perde tutto il sistema), 
 permette di scalare orizzontalmente il sistema, aggiungendo nuovi \textit{brokers} qualora fosse necessario.
-I \textit{brokers} permettono anche un meccanismo di replica dei dati, sia per scopi di scalabilità che per garantire la fault-tollerance.
+I \textit{brokers} permettono anche un meccanismo di replica dei dati, sia per scopi di scalabilità che per garantire la fault-tolerance.
 L'unità che viene replicata è la partizione di un \textit{Topic}, ogni partizione è replicata su un numero di \textit{brokers} configurabile,
 andando a definire due categorie di \textit{brokers}: i \textbf{leader} ed i \textbf{followers}, 
-ogni partizione ha un almeno un \textit{leader} ed un numero arbitratio di \textit{followers}.\\\\
+ogni partizione ha un almeno un \textit{leader} ed un numero arbitrario di \textit{followers}.\\\\
 Il servizio che si occupa di coordinare i vari \textit{Brokers} all'interno del \textit{Cluster} è chiamato \textbf{leader} ed è un nodo con maggiori responsabilità.
-Infatti il \textit{leader} è un \textit{broker} il cui scopo principale è coordinare le richieste di lettura e scrittura da parte dei \textit{clients} \ref{subsec:kakfa_clients}.
+Infatti il \textit{leader} è un \textit{broker} il cui scopo principale è coordinare le richieste di lettura e scrittura da parte dei \textit{clients} (\ref{subsec:kakfa_clients}).
 Ciò risulta necessario per garantire che i dati siano coerenti e che non ci siano conflitti tra le operazioni di scrittura e lettura,
 infatti un \textit{producer} scriverà sempre sul \textit{leader} ed i \textit{followers} si occuperanno di mantenere i dati aggiornati,
-tutto ciò per evitare problemi di incosistenza dei dati senza bisogno di introdurre meccanismi di mutuo aggiornamento tra i \textit{brokers}. 
+tutto ciò per evitare problemi di inconsistenza dei dati senza bisogno di introdurre meccanismi di mutuo aggiornamento tra i \textit{brokers}. 
 
 \subsection{Clients}
 \label{subsec:kakfa_clients}
 I \texttt{Consumers} ed i \texttt{Producers}, insieme ai \textit{Topics}, sono gli elementi alla base del funzionamento di \textit{Kafka}.
-Il \textit{Cluster Kafka} composto dai vari \textit{Brokers} svolge il ruolo di \textbf{Server}, mentre i \texttt{Consumers} ed i \texttt{Producers} fungono da \textbf{Clients},
+Il \textit{Kafka Cluster} composto dai vari \textit{Brokers} svolge il ruolo di \textbf{Server}, mentre i \texttt{Consumers} ed i \texttt{Producers} fungono da \textbf{Clients},
 collegandosi al cluster e interagendo con i dati presenti sui \textit{Topics}.
 I \textit{Clients} sono i componenti che si occupano di implementare la logica di business e sono quindi interamente scritti dallo sviluppatore che sfruttera le due API messe a disposizione da Kakfa,
 \textit{Consumer API} e \textit{Producer API}
@@ -85,12 +85,12 @@ I \textit{Clients} sono i componenti che si occupano di implementare la logica d
 \texttt{Kafka Streams} è una API per processare eventi su un \texttt{Topic Kafka} (filtrare, trasformare, aggregare, ...).
 Ad esempio se volessi sapere quanti ordini di trasporto sono stati spediti oggi, potrei fare un filtro per data e poi un count,
 quello che il \texttt{Kafka Stream} fornirà in output sarà un altro flusso di dati filtrato, che potrò salvare su un nuovo \texttt{Topic} o in un database.\\
-Nascono con l'intenzione di "astrarre" tutte le operazioni di basso livello quali la lettura o la scrittura su un \textit{Topic}, permettendo allo sviluppatore di preoccuparsi solamente di come i dati devono essere modificati, senza dover scrivere codice per ottenerli o ripublicarli.
-In pratica qualsiasi operazione implementabile tramite \texttt{Kafka Streams} sarebbe allo stesso modo implementabile da un microservizio che legge da un \textit{Topic}, elabora i dati e li riscrive su un \textit{Topic}(lo stesso o un altro), ma grazie agli \texttt{Streams} si possono delegare le operazioni di collegamento con il \texttt{Kakfka Cluster} e concentrarsi solamente sull'elaborazione dei dati.
+Nascono con l'intenzione di "astrarre" tutte le operazioni di basso livello quali la lettura o la scrittura su un \textit{Topic}, permettendo allo sviluppatore di preoccuparsi solamente di come i dati devono essere modificati, senza dover scrivere codice per ottenerli o ripubblicarli.
+In pratica qualsiasi operazione implementabile tramite \texttt{Kafka Streams} sarebbe allo stesso modo implementabile da un microservizio che legge da un \textit{Topic}, elabora i dati e li riscrive su un \textit{Topic}(lo stesso o un altro), ma grazie agli \texttt{Streams} si possono delegare le operazioni di collegamento con il \texttt{Kafka Cluster} e concentrarsi solamente sull'elaborazione dei dati.
 L'utilizzo dei \texttt{Kafka Streams} ha i seguenti vantaggi:
 \begin{itemize}
     \item Efficienza: Il tipo di computazione è per-record, cioè ogni dato pubblicato sul \textit{Topic} a cui lo \texttt{Stream} è collegato viene subito processato. Non c'è bisogno di effettuare "batching", cioè richiedere i dati ad intervalli di tempo regolari ed elaborare solo i dati giunti in tale intervallo. Il sistema può lavorare quasi in tempo reale.  
-    \item Scalabilità: Gli \texttt{Stream} sono scalabili e fault-tollerant. Essendo \textit{Kafka} pensato per essere un sistema distribuito anche gli \texttt{Streams} sono pensati per essere scalati e distribuiti, se si creano diverse istanze dello stesso \texttt{Stream} queste collaboreranno automaticamente suddividendosi il carico computazionale.
+    \item Scalabilità: Gli \texttt{Stream} sono scalabili e fault-tolerant. Essendo \textit{Kafka} pensato per essere un sistema distribuito anche gli \texttt{Streams} sono pensati per essere scalati e distribuiti, se si creano diverse istanze dello stesso \texttt{Stream} queste collaboreranno automaticamente suddividendosi il carico computazionale.
     \item Riuso del codice: si utilizza una chiamata all API al posto di riscrivere lo stesso codice per differenti microservizi.
 \end{itemize}
 
@@ -101,7 +101,7 @@ I \texttt{Connectors} producono flussi di eventi partendo da dati ricevuti da un
 Per esempio un \texttt{Connector} ad un database relazionale potrebbe catturare tutte le operazioni effettuate su una tabella e generare un flusso di eventi in cui ogni evento corrisponde ad un cambiamento.\\
 Similmente ai \textit{Kafka Streams} (\ref{subsec:kafka_streams}) i principali vantaggi di utilizzare un \texttt{Connector} piuttosto che scrivere da se il codice per svolgere lo stesso compito sono
 \textbf{efficienza}, \textbf{scalabilità} e \textbf{riuso del codice}.
-Inoltre sono presenti diversi repository online dove trovare \texttt{Connector} già pronti, sviluppati dalla community o dagli sviluppatori delle applicazioni esterne (sqlserver, JDBC, Amazon S3),
+Inoltre sono presenti diversi repository online dove trovare \texttt{Connector} già pronti, sviluppati dalla community o dagli sviluppatori delle applicazioni esterne (SQLserver, JDBC, Amazon S3),
 uno dei più diffusi è il \texttt{confluent-hub} https://www.confluent.io/product/connectors/ \todo{questo deve diventare un link o essere spostato in bibliografia}
 
 \newpage
@@ -111,8 +111,8 @@ uno dei più diffusi è il \texttt{confluent-hub} https://www.confluent.io/produ
 \texttt{Debezium} è una piattaforma distribuita open source per la cattura dei dati di modifica, permette di catturare le operazioni di modifica effettuate su un database (\textit{insert, update e delete}) e di trasformarle in eventi.
 Nativamente tutti i più comuni database sono supportati, tra cui \textit{MySQL, PostgreSQL, MongoDB, SQL Server, Oracle, ...}.\\\\
 \texttt{Debezium} è costruito sulla base di \textit{Apache Kafka}, di conseguenza è facilmente integrabile con esso.
-Ci sono infatti due modi per utilizzare questa piattaforma: come un sistema distriubuito a se stante oppure tramite un \texttt{Kafka Connector}(\ref{subsec:kafka_connectors}).
-Il primo modo presenta tutti i vantaggi di un sistema distribuito, come la scalabilità e la fault-tollerance, ma ha un costo in termini di risorse, di configurazione e di gestione.
+Ci sono infatti due modi per utilizzare questa piattaforma: come un sistema distribuito a se stante oppure tramite un \texttt{Kafka Connector}(\ref{subsec:kafka_connectors}).
+Il primo modo presenta tutti i vantaggi di un sistema distribuito, come la scalabilità e la fault-tolerance, ma ha un costo in termini di risorse, di configurazione e di gestione.
 In questo modo è inoltre possibile consumare gli eventi prodotti tramite un qualsiasi sistema esterno, non si è obbligati ad utilizzare \textit{Kafka}.\\
 Se invece si ha già una infrastruttura già basata su \textit{Kafka} è molto più conveniente utilizzare \texttt{Debezium} come \texttt{Connector}, con un considerevole risparmio di risorse e di tempo.  
 
@@ -120,17 +120,18 @@ Se invece si ha già una infrastruttura già basata su \textit{Kafka} è molto p
 \section{Apache Flink}
 \label{sec:flink_overview}
 \textit{Apache Flink is a framework and distributed processing engine for stateful computations over unbounded and bounded data streams. Flink has been designed to run in all common cluster environments, perform computations at in-memory speed and at any scale.}\cite*{flinkwebsite}\\\\
-\textit{Apache Flink} è sia un framework che un motore di elaborazione distribuito per la computazione di flussi di dati (\texttt{streams)}), \textit{bounded} e \textit{unbounded}.
+\textit{Apache Flink} è sia un framework che un motore di elaborazione distribuito per la computazione di flussi di dati (\texttt{streams}), \textit{bounded} e \textit{unbounded}.
 Può essere utilizzato per elaborare dati in tempo reale, ma anche per elaborare grandi quantità di dati in batch.
 Fornisce sia una API per la creazione di applicazioni di elaborazione di dati, sia un \textit{runtime} environment distribuito per eseguirle,
 per questo motivo si può considerare sia un \textit{framework} che un \textit{motore di esecuzione}.
-Come anticipiato i tipi di dato trattato sono sempre \texttt{streams} che possono essere:
+Come anticipato i tipi di dato trattato sono sempre \texttt{streams} che possono essere:
 \begin{itemize}
     \item \textbf{Unbounded}: un flusso di dati che non ha un inizio o una fine, come ad esempio un flusso di eventi generati da un sensore.
     \item \textbf{Bounded}: un flusso di dati con un inizio e una fine, come ad esempio un file o una tabella di un database.
 \end{itemize}
 Sui flussi \textit{Bounded} possono essere eseguite tutte le operazioni eseguibili sui flussi \textit{Unbounded}, ma non viceversa.
-Per fare ciò bisogna ricorrere a delle operazioni di \textit{windowing}, cioè dividere il flusso in finestre (temporali o di conteggio 
+Per eseguire operazioni \textit{"Bound"} su un flusso \textit{Unbounded} bisogna ricorrere a delle operazioni di \textit{windowing},
+cioè dividere il flusso in finestre (temporali o di conteggio 
 \footnote{Per \textit{finestra di conteggio} si intende una finestra che contiene un numero fisso di elementi, ad esempio una finestra di 100 elementi.
 In inglese si parla di \textit{count window}. maggiori informazioni nella sezione \textit{Windowing} \ref{subsec:flink_windowing}})
 e poi eseguire le operazioni su queste finestre.
@@ -152,26 +153,26 @@ ed anche dei \textit{connectors} sviluppati da \textit{Apache} stessa, come \tex
 Inoltre si posso trovare \textit{connectors} sviluppati da terza parti ed è sempre possibile implementarne di nuovi in base alle proprie esigenze.  
 
 
-\subsection{Statefull stream processing}
+\subsection{Stateful stream processing}
 \label{subsec:flink_statefull_processing}
 \textit{Flink} può svolgere operazioni che richiedono il mantenimento di uno stato, cioè un insieme di informazioni riguardanti gli eventi passati.
-Semplici esempi di elaborazioni che richiedono uno stato sono: la ricerca di un pattern, il calcolo di una media (mobile se si parl di \textit{Stream Unbounded}), il calcolo di una somma, etc \dots
-\textit{Flink} sfrutta lo stato anche per garantire la \textit{fault-tollerance}, cioè la capacità di ripristinare il sistema in caso di guasto.\\\\
-Il metodo più comune con cui una applicazione \textit{Flink} sfrutta lo \textit{Statefull processing} è tramite l'uso di \textit{Keyed Stream}.
+Semplici esempi di elaborazioni che richiedono uno stato sono: la ricerca di un pattern, il calcolo di una media (mobile se si parl di \textit{Stream Unbounded}), una somma, etc \dots\\
+\textit{Flink} sfrutta lo stato anche per garantire la \textit{fault-tolerance}, cioè la capacità di ripristinare il sistema in caso di guasto.\\\\
+Il metodo più comune con cui una applicazione \textit{Flink} sfrutta lo \textit{Stateful processing} è tramite l'uso di \textit{Keyed Stream}.
 Operando su un \texttt{DataStream} può essere effettuata una operazione di \texttt{keyBy(key)}, dove \textit{key} è un qualsiasi oggetto java (POJO) che implementa il metodo \texttt{hashCode()}.
 Tale operazione permette di raggruppare gli eventi in base ad una chiave, in modo che tutti gli eventi con la stessa chiave appartengano alla stessa partizione logica.
-Si ottiene quindi un \texttt{KeyedStream} su cui è possibile eseguire operazioni di \textit{statefull processing}, 
-il seguente codice di esempio mostra come calcolare la somma di un \texttt{KeyedStream} di ogetti composti da una chiave (\textit{f0}) e un valore(\textit{f1}):\\
+Si ottiene quindi un \texttt{KeyedStream} su cui è possibile eseguire operazioni di \textit{stateful processing}, 
+il seguente codice di esempio mostra come calcolare la somma di un \texttt{KeyedStream} di oggetti composti da una chiave (\textit{f0}) e un valore(\textit{f1}):\\
 \begin{code}
     \inputminted{java}{listings/keyed-stream.java}
-    \caption{Esempio di operazione statefull su un KeyedStream}
+    \caption{Esempio di operazione stateful su un KeyedStream}
     \label{lst:keyed_stream}
 \end{code}
 Oltre ad essere necessario per mantenere uno stato il partizionamento tramite chiave permette anche di parallelizzare le operazioni, 
 dato che ci assicura non ci saranno conflitti tra le operazioni eseguite su partizioni diverse.
 Nell'esempio precedente (listing \ref{lst:keyed_stream}) la somma potrebbe venire calcolata in parallelo per ogni chiave, dato che lo stato mantenuto dal sistema,
-che corrispone semplicemente alla variabile \texttt{accumulator}, non viene mai acceduto durante la computazione di un dato avente un'altra chiave, posto naturalmente che si abbia a disposizione sufficienti risorse computazionali.
-Il discorso di come \textit{Flink} gestisca le risorse è approfondito nella sezione \ref{subsubsec:flink_Task_slots}.
+che corrisponde semplicemente alla variabile \texttt{accumulator}, non viene mai acceduto durante la computazione di un dato avente un'altra chiave, posto naturalmente che si abbia a disposizione sufficienti risorse computazionali.
+Il discorso di come \textit{Flink} gestisce le risorse è approfondito nella sezione \ref{subsubsec:flink_Task_slots}.
 
 \subsection{Windowing}
 \label{subsec:flink_windowing}
@@ -187,7 +188,7 @@ Rispettando questa distinzione si possono avere altri 3 tipi di finestre:
 \begin{itemize}
     \item \textbf{Tumbling Window}: una finestra temporale o di conteggio che non si sovrappone ad altre finestre, ad esempio una finestra di 1 minuto.
     \item \textbf{Sliding Window}: una finestra temporale che si sovrappone ad altre finestre, ad esempio una finestra di 1 minuto che si sposta di 30 secondi ad ogni nuovo evento.
-    \item \textbf{Session Window}: una finestra temporale che si basa su un intervallo di tempo inattivo, ad esempio una finestra di 1 minuto che si chiude quando non ci sono eventi per 5 secondi.
+    \item \textbf{Session Window}: una finestra temporale che si basa su un intervallo di tempo inattivo, ad esempio una finestra che si chiude quando non ci sono eventi per 5 secondi.
     Come le sliding window anche le session window si possono sovrapporre.
 \end{itemize}
 Un esempio dei vari tipi di finestra è mostrato in figura \ref{fig:flink_window}
@@ -205,10 +206,10 @@ Un esempio dei vari tipi di finestra è mostrato in figura \ref{fig:flink_window
 Legato al concetto di finestra temporale è il concetto di \textit{Watermark}, un \textit{Watermark} è un marcatore temporale che indica il punto in cui non ci saranno più eventi precedenti.
 Nascono dalla necessità di misurare il tempo quando si lavora con \textit{finestre temporali} dato che l'operatore \textit{finestra} ha bisogno di essere notificato
 quando è passato più tempo di quanto specificato ed è ora che la finestra si chiuda (non accetti più eventi) ed inizi la computazione.\\\\
-I \textit{watermarks} vengono gestiti da \textit{Flink} come se fossero normali eventi, sono inseriti all'interno del flusso di eventi e contenfono un timestamp \textit{t}.
+I \textit{watermarks} vengono gestiti da \textit{Flink} come se fossero normali eventi, sono inseriti all'interno del flusso di eventi e contengono un timestamp \textit{t}.
 quando il \textit{Watermark} con timestamp $t$ raggiunge l'operatore finestra l'assunzione implicita è che non ci dovrebbero più arrivare elementi con timestamp $t'$ tali per cui $t' \leq t$.
 Cioè eventi verificatisi "prima" del tempo $t$ del \textit{watermark}.
-Questo strumento non sembra molto utile finchè si considerano flussi di dati ordinati ma diventa fondamentale se il flusso su cui stiamo operando presenta eventi
+Questo strumento non sembra molto utile finché si considerano flussi di dati ordinati ma diventa fondamentale se il flusso su cui stiamo operando presenta eventi
 non ordinati (rispetto al timestamp).
 Situazione che si verifica di frequente quando si ha a che fare con sistemi complessi e distribuiti dove non è garantito che gli eventi 
 giungano al sistema di elaborazione mantenendo l'ordine con cui sono avvenuti.
@@ -221,11 +222,11 @@ Un esempio di flusso con eventi non ordinati ed il relativo uso dei \textit{wate
 \end{figure}
 Nel caso di eventi fuori ordine si possono impostare le \textit{finestre} in modo che permettano un "ritardo" nell'arrivo di alcuni eventi anche dopo che il \textit{watermark} ha raggiunto la finestra.
 Gli eventi in ritardo sono formalmente definiti come gli eventi aventi $t' \leq t$ ma che giungono alla \textit{finestra} dopo l'arrivo del \textit{watermark} e possono essere gestiti in diversi modi.
-Tra i più comuni abbiamo la possibilità di reindirizzarli in un apposito flusso (\textit{side output}) oppure di rielaborare tutti i dati nella \textit{finestra} scartando la precendente computazione (\textit{firing})
+Tra i più comuni abbiamo la possibilità di reindirizzarli in un apposito flusso (\textit{side output}) oppure di rielaborare tutti i dati nella \textit{finestra} scartando la precedente computazione (\textit{firing})
 
 \subsection{Flink Cluster}
 \label{subsec:flink_cluster}
-Un \textit{Flink Cluster} è penasto per essere eseguito in un ambiente distribuito, come ad esempio un \textit{Hadoop YARN} o \textit{Kubernetes},
+Un \textit{Flink Cluster} è pensato per essere eseguito in un ambiente distribuito, come ad esempio un \textit{Hadoop YARN} o \textit{Kubernetes},
 ma non è limitato a ciò, può essere eseguito anche in un ambiente \textit{standalone} oppure si può sfruttare solo la API di Flink senza dover necessariamente eseguire un \textit{Cluster}.
 \begin{figure}[htbp]
     \centering
@@ -255,17 +256,17 @@ ma non è limitato a ciò, può essere eseguito anche in un ambiente \textit{sta
 \subsubsection{Task Slots}
 \label{subsubsec:flink_Task_slots}
 Per comprendere il concetto di \textit{Task Slot} è necessario comprendere come viene gestito il \textit{parallelismo} in \texttt{Flink}.    
-Un programma scritto tramite l'API di \texttt{Flink} non viene eseguito sequenzialmente, ma viene diviso in sottoprocessi che possono essere eseguiti in parallelo.
-Ad esempio un semplice programma che riceve dei dati, li filtra e li salva su un database potrebbe essere diviso in tre sottoprocessi: ricezione, filtro e scrittura.
-Questi tre sottoprocessi sono chiamati \textit{Task} e possono essere, parzialmente, eseguiti in parallelo.\\
+Un programma scritto tramite l'API di \texttt{Flink} non viene eseguito sequenzialmente, ma viene diviso in sotto-processi che possono essere eseguiti in parallelo.
+Ad esempio un semplice programma che riceve dei dati, li filtra e li salva su un database potrebbe essere diviso in tre : ricezione, filtro e scrittura.
+Questi tre sotto-processi sono chiamati \textit{Task} e possono essere, parzialmente, eseguiti in parallelo.\\
 Inoltre, come anticipato nella sezione \ref{subsec:flink_statefull_processing}, una operazione di \texttt{KeyBy()} suddivide uno stream in partizioni di dati
-indipedenti tra loro, quindi tutte le operazioni su questi dati possono essere eseguite in parallelo.
+indipendenti tra loro, quindi tutte le operazioni su questi dati possono essere eseguite in parallelo.
 Potenzialmente potremmo eseguire la computazione di questi dati dedicando un \textit{Task} ad ogni partizione, cioè per ogni \textit{key} presente nello stream,
 ottenendo così il massimo parallelismo possibile.
 Qualora non si abbia a disposizione sufficienti risorse computazionali per dedicare ad ogni partizione un \textit{Task} il \texttt{Flink runtime environment} 
 automaticamente aggregherà più partizioni in un cosiddetto \textbf{Key Group} che verrà trattato come una qualsiasi altra partizione.
 \\\\
-Ogni \texttt{TaskManager} è sostanzialmente un processo che esegue la JVM ed il codice, quindi può eseguire uno o più sottoprocessi in diversi \textit{threads}.
+Ogni \texttt{TaskManager} è sostanzialmente un processo che esegue la JVM ed il codice, quindi può eseguire uno o più sotto-processi in diversi \textit{threads}.
 Ogni \texttt{Task Slot} rappresenta un sottoinsieme di risorse computazionali di un \texttt{TaskManager}.
 Ad esempio un \texttt{TaskManager} con 3 \texttt{Task Slot} dedicherà 1/3 delle sue risorse a ciascun \texttt{Task Slot}.
 Più \texttt{Task Slot} si hanno a disposizione, più \texttt{Task} si possono eseguire in parallelo, ma anche meno risorse si avranno a disposizione per ciascun \texttt{Task}.
@@ -286,8 +287,8 @@ La \textit{Table API} è un'API di alto livello per \textit{Flink} che permette 
 Le query scritte in un linguaggio SQL-like e vengono tradotte in \texttt{operatori}, 
 allo stesso modo di come avviene con i programmi scritti tramite la \textit{DataStream API}.
 L'unica differenza è quindi la sintassi con cui ci si interfaccia con il motore di esecuzione, a livello di esecuzione non ci sono differenze.
-In questo progetto non è stata utilizzata la \textit{Table API}, in parte perchè non necessaria (il resto del sistema è \textit{stream-oriented}) ed in parte
-perchè si tratta di una funzionalità ancora in fase di sviluppo e disponibile solo nelle ultime due versioni di \textit{Flink} (1.19 e 1.20-SNAPSHOT).
+In questo progetto non è stata utilizzata la \textit{Table API}, in parte perché non necessaria (il resto del sistema è \textit{stream-oriented}) ed in parte
+perché si tratta di una funzionalità ancora in fase di sviluppo e disponibile solo nelle ultime due versioni di \textit{Flink} (1.19 e 1.20-SNAPSHOT).
 In ogni caso la \textit{Table API} è una API su cui Apache sta investendo molto e che diventerà parte integrante di \textit{Flink} in futuro, quindi 
 ho ritenuto necessario parlarne brevemente per completezza.
 
@@ -319,4 +320,4 @@ In particolare \texttt{Hibernate} fornisce una implementazione di \textit{JPA}, 
 L'utilizzo più comune di \textit{Hibernate JPA} è quello di implementare un \textit{Repository Pattern}, cioè una classe che si occupa di interagire con il database e di eseguire le query.
 Un Repository class incapsula tutto il codice associato alla persistenza, escludendo però qualsiasi logica di business. 
 Offre metodi per l'inserimento, l'aggiornamento e la rimozione di entità nel database, oltre a metodi per la creazione ed esecuzione di query specifiche.
-L'intento di questo modello è di disaccoppiare il codice di persistenza dal codice di business, migliorando così la riutilizzabilità del codice di persistenza.\\\\
+L'intento di questo modello è di disaccoppiare il codice di persistenza dal codice di business, migliorando così la riusabilità del codice di persistenza.\\\\

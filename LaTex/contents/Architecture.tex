@@ -1,7 +1,7 @@
 \chapter{Architettura del sistema}
 \label{ch:architecture}
 Il \textit{Progetto Velocity} è una parte di un sistema di Track\&Trace il cui scopo è il monitoraggio in near real time della logistica.
-Al momento il sistema monolitico legacy gestisce tutto, il nuovo sistema, il cui primo componente è \textit{Velocity}, lo soppianterà gradualmente, seguendo un approcio \textit{brownfield}.
+Al momento il sistema monolitico legacy gestisce tutto, il nuovo sistema, il cui primo componente è \textit{Velocity}, lo soppianterà gradualmente, seguendo un approccio \textit{brownfield}.
 In questo momento si stanno sviluppando i nuovi servizi e li si sta integrando con il vecchio sistema, i nuovi clienti vengono direttamente gestiti con le componenti
 funzionanti del nuovo sistema, i clienti che invece venivano gestiti con il sistema legacy stanno venendo gradualmente trasferiti.
 
@@ -55,7 +55,7 @@ I vantaggi di creare un sistema orientato ad eventi sono due:
     \item Il sistema intercetta tutti gli eventi, anche quelli intermedi. Ad esempio se un ordine viene creato e poi annullato, il sistema monolitico non si accorge di nulla, se queste due operazioni avvengono nell'intervallo tra l'esecuzione di una batch e l'altra. 
 \end{itemize}
 Quindi sono state prese alcune responsabilità del vecchio sistema e le si sono spostate in un nuovo sistema (\textit{Velocity}) basato su eventi.
-Altre fuzionalità sono invece state implementate in un nuovo sistema, che attinge da Velocity e svolge le restanti funzioni del \textit{T\&T}.
+Altre funzionalità sono invece state implementate in un nuovo sistema, che attinge da Velocity e svolge le restanti funzioni del \textit{T\&T}.
 Al momento ci sono quindi due sistemi di \textit{T\&T}, uno alimentato da velocity, l'altro completamente indipendente.
 I due sistemi \textit{T\&T} sono sviluppati in \texttt{.NET}, il vecchio è un servizio Windows che gira su un server virtuale, 
 il nuovo è una \texttt{Azure function} (simili alle AWS lambda), che si trova sul cloud Azure ed è in ascolto sui \textit{Kafka topic} su cui opera \textit{Velocity}.
@@ -81,7 +81,7 @@ Per rendere possibile ciò Il progetto è completamente ad eventi, basato su \te
 Inoltre per ridurre al minimo la latenza il sistema è costruito su una architettura cloud, che per il momento si appoggia ad \texttt{Azure} ed è pensata apposta per essere scalabile.
 L'Immagine \ref{fig:collocazione_velocity_img} mostra dove si colloca \textit{Velocity} all'interno del sistema.
 \textit{Velocity} (quello che in nell'immagine vede etichettato come "confluent cloud") lavora con input che arrivano dal \textit{TMS}, cioè con \textbf{Technical Events},
-oppure con input che arrivano dagli autisti dei camion tramte apposita app interna, cioè con \textbf{Business Events}.
+oppure con input che arrivano dagli autisti dei camion tramite apposita app interna, cioè con \textbf{Business Events}.
 La differenza tra questi due eventi sarà approfondita nella sezione \ref{sec:velocity_streams}.
 
 
@@ -128,7 +128,7 @@ Un esempio di microservizio che si occupa di inoltrare gli avvisi di tracciament
 \\\\
 come si può vedere in figura \ref{fig:collocazione_velocity_img} i \textit{Business Events} (che vivono nel \textit{Signaling topic}) sono eventi generati dai \textit{Kafka Streams}.
 I \textit{Domain Events} che vivono sul \textit{Domain Topic}, vengono elaborati attraverso i \textit{Kafka stream} e vengo scritti nel \textit{Fast Storage}.
-Dal fast storage vengono letti ed elaborati da diversi microservizi che arrichiscono ed unificano le informazioni, in seguito vengono scritti nel \textit{Signaling Topic}.
+Dal fast storage vengono letti ed elaborati da diversi microservizi che arricchiscono ed unificano le informazioni, in seguito vengono scritti nel \textit{Signaling Topic}.
 Ad esempio un oggetto di dominio "consegna" porta con se diversi eventi di business: l'aggiornamento della geolocalizzazione dell'ordine ad esso associato, la notifica dell'avvenuta consegna al cliente, etc ...
 Basandosi su quanto scritto nel \textit{Fast Storage}, che è stato scritto in base ai \textit{Domain Events} precedentemente giunti al \textit{Domain Topic},
 i microservizi che osservano il \textit{Fast Storage} generano \textit{Business Events}.
@@ -139,7 +139,7 @@ Questi eventi perciò contengono 3 principali informazioni:
 \begin{itemize}
 \item tipo di evento: spedizione, ritiro, viaggio, disposizione o ordine FTL (Full Truck Load)
 \item quali oggetti nel datamodel sono stati modificati.
-Ciò corrisponde a speficare quali tabelle all'interno del \textit{Fast Storage} sono state interessate dal \textit{Domain Event}.
+Ciò corrisponde a specificare quali tabelle all'interno del \textit{Fast Storage} sono state interessate dal \textit{Domain Event}.
 \item quali "campi sensibili" sono stati modificati.
 I campi sensibili sono quei campi che, se modificati, possono interessare il consumer dell'evento.
 Ad esempio, se un ordine cambia data di consegna, il consumer (ed il cliente) potrebbero essere molto interessati a questa informazione.
@@ -190,7 +190,7 @@ A questo punto vengono eseguiti i vari \textit{Jobs}, uno per ogni \textit{chunk
 \subsubsection{Event Engine}
 \label{subsubsec:event_engine}
 Similmente a \texttt{Micro Batch} (sezione \ref{subsubsec:micro_batch}) l'\textit{Event Engine} si occupa di "costruire" degli oggetti di business partendo dal \textit{Fast Storage}, questi oggetti sono pensati per la \textit{ease of consumption} di eventuali client.\\
-In altre parole si occupa di osservare i cambiamenti di stato dei diversi eventi di dominio (segnalati dall \textbf{SGA} che monitora il \textbf{TMS}) e generare una serie di eventi di business associati (es: 
+In altre parole si occupa di osservare i cambiamenti di stato dei diversi eventi di dominio (segnalati dal \textbf{SGA} che monitora il \textbf{TMS}) e generare una serie di eventi di business associati (es: 
 “spedizione partita”, “ritiro fallito”, “arrivo stimato”, …)\\\\
 Rispetto al caso \texttt{Micro Batch} (\ref{subsubsec:micro_batch})la fase di \textit{Reading} ritorna solo un record per ogni chiave di dominio,
 quindi ad ogni \textit{chunk} corrisponde una e solo una chiave di dominio.
