@@ -310,6 +310,8 @@ in modo che chiunque lo legga possa ricostruire i dati.\\
 Se invece si usa \textit{Avro} in RPC (\textit{Remote Procedure Call}) non conviene includere lo \textit{schema} in ogni messaggio,
 dato che sarebbe ridondante e aumenterebbe inutilmente la dimensione dei messaggi.
 In questo caso la prassi è che client e server si scambino lo \textit{schema} una sola volta, durante la fase di handshake.
+La best practice è quindi di salvare lo \textit{schema} in un file separato e condividerlo tra i vari sistemi che devono scambiarsi i dati, sfruttando un endpoint dedicato per la gestione degli schemi,
+chiamato \textbf{Schema Registry}.
 
 \subsection{Hybernate JPA}
 \label{subsec:hibernate_overview}
