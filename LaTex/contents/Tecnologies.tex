@@ -102,7 +102,7 @@ Per esempio un \texttt{Connector} ad un database relazionale potrebbe catturare 
 Similmente ai \textit{Kafka Streams} (\ref{subsec:kafka_streams}) i principali vantaggi di utilizzare un \texttt{Connector} piuttosto che scrivere da se il codice per svolgere lo stesso compito sono
 \textbf{efficienza}, \textbf{scalabilità} e \textbf{riuso del codice}.
 Inoltre sono presenti diversi repository online dove trovare \texttt{Connector} già pronti, sviluppati dalla community o dagli sviluppatori delle applicazioni esterne (SQLserver, JDBC, Amazon S3),
-uno dei più diffusi è il \texttt{confluent-hub} https://www.confluent.io/product/connectors/ \todo{questo deve diventare un link o essere spostato in bibliografia}
+uno dei più diffusi è il \texttt{confluent-hub} https://www.confluent.io/product/connectors/ \todo{questo link va spostato in una appendice o in footnote}
 
 \newpage
 \section{Debezium}
@@ -149,7 +149,7 @@ I \textit{connectors} possono potenzialmente essere qualsiasi cosa (un file, un 
 in generale però è buona norma che questi siano basati su eventi, dato che \textit{Flink} è pensato per lavorare su flussi di dati.
 \textit{Flink} fornisce dei \textit{connectors} predefiniti per i più comuni tipi di sorgenti e destinazioni, come ad esempio \textit{sockets, console, files, ...},
 ed anche dei \textit{connectors} sviluppati da \textit{Apache} stessa, come \textit{Kafka, RabbitMQ, Elasticsearch, ...}. 
-% \todo{inserire link a https://nightlies.apache.org/flink/flink-docs-release-1.18/docs/dev/datastream/overview/#data-sinks}
+% \todo{inserire link a https://nightlies.apache.org/flink/flink-docs-release-1.18/docs/dev/datastream/overview/#data-sinks, anche qui, appendice o footnote}
 Inoltre si posso trovare \textit{connectors} sviluppati da terza parti ed è sempre possibile implementarne di nuovi in base alle proprie esigenze.  
 
 
@@ -199,7 +199,7 @@ Un esempio dei vari tipi di finestra è mostrato in figura \ref{fig:flink_window
     \caption{Tipi di finestra}
     \label{fig:flink_window}
 \end{figure}
-%TODO: citare la fonte dell'immagine https://datafibers-community.github.io/blog/2019/10/05/2019-10-05-flink-windows-explained/
+\cite{flinkWindowing}
 
 \subsubsection{Wartermarks}
 \label{subsubsec:flink_watermarks}
