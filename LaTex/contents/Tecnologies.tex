@@ -3,7 +3,6 @@
 
 \section{Apache Kafka}
 \label{ch:kafka_overview}
-%https://kafka.apache.org/intro
 \textit{Apache Kafka is an open-source distributed event streaming platform.}\cite{kafkawebsite}\\\\
 \texttt{Apache Kafka} è una piattaforma open-source per l'archiviazione e l'analisi di flussi di dati.
 Si basa sul concetto di \textit{Flusso di eventi (event Stream)}, cioè la pratica di catturare dati in real-time da diverse fonti (databases, sensori, software, ...) sotto forma di \textbf{Eventi}.\\
@@ -26,7 +25,7 @@ Un \texttt{Cluster} di esempio è mostrato in figura \ref{fig:kafka_cluster}
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{images/kafka/cluster.jpg}
-    \caption{Kafka Cluster}
+    \caption{Kafka Cluster. Scaler \cite{kafkaScaler}}
     \label{fig:kafka_cluster}
 \end{figure}
 \\\texttt{Kafka} è pensato per essere scalabile, fault-tolerant e ad alte prestazioni.
@@ -34,7 +33,6 @@ Un \texttt{Cluster} di esempio è mostrato in figura \ref{fig:kafka_cluster}
 É fault-tolerant in quanto è possibile configurare repliche dei \textit{Brokers} in modo da garantire che i dati siano sempre disponibili, anche in caso di guasto di un \texttt{Broker}.
 Ed infine è ad alte prestazioni in quanto la responsabilità di ogni \texttt{Broker} è limitata, cioè ogni \texttt{Broker} si occupa solo di un sottoinsieme dei \textit{Topic} presenti nel \texttt{Cluster}, 
 permettendo di distribuire sia il carico computazionale sia il carico di rete, di modo che nessun \texttt{Broker} sia sovraccaricato.
-% dovrei citare la fonte della figura https://www.scaler.com/topics/kafka-cluster/
 
 \subsection{Topic}
 \label{subsec:kafka_topics}
@@ -51,10 +49,9 @@ Un esempio di partizionamento è mostrato in figura \ref{fig:kafka_topic}
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\textwidth]{images/kafka/topic.png}
-    \caption{Partizionamento Kafka Topic}
+    \caption{Partizionamento Kafka Topic. Datastax \cite{kafkaDatastax}}
     \label{fig:kafka_topic}
 \end{figure}
-%fonte della figura https://docs.datastax.com/en/kafka/doc/kafka/kafkaHowMessages.html
 
 \subsection{Brokers}
 \label{subsec:kafka_brokers}
@@ -102,9 +99,8 @@ Per esempio un \texttt{Connector} ad un database relazionale potrebbe catturare 
 Similmente ai \textit{Kafka Streams} (\ref{subsec:kafka_streams}) i principali vantaggi di utilizzare un \texttt{Connector} piuttosto che scrivere da se il codice per svolgere lo stesso compito sono
 \textbf{efficienza}, \textbf{scalabilità} e \textbf{riuso del codice}.
 Inoltre sono presenti diversi repository online dove trovare \texttt{Connector} già pronti, sviluppati dalla community o dagli sviluppatori delle applicazioni esterne (SQLserver, JDBC, Amazon S3),
-uno dei più diffusi è il \texttt{confluent-hub} https://www.confluent.io/product/connectors/ \todo{questo link va spostato in una appendice o in footnote}
+uno dei più diffusi è il \texttt{confluent-hub} \footnote{\texttt{Confluent-hub connectors:} \url{https://www.confluent.io/product/connectors/}}
 
-\newpage
 \section{Debezium}
 \label{sec:debezium_overview}
 \textit{Debezium is an open source distributed platform for change data capture. Start it up, point it at your databases, and your apps can start responding to all of the inserts, updates, and deletes that other apps commit to your databases.}\cite*{debeziumwebsite}\\\\
@@ -149,7 +145,7 @@ I \textit{connectors} possono potenzialmente essere qualsiasi cosa (un file, un 
 in generale però è buona norma che questi siano basati su eventi, dato che \textit{Flink} è pensato per lavorare su flussi di dati.
 \textit{Flink} fornisce dei \textit{connectors} predefiniti per i più comuni tipi di sorgenti e destinazioni, come ad esempio \textit{sockets, console, files, ...},
 ed anche dei \textit{connectors} sviluppati da \textit{Apache} stessa, come \textit{Kafka, RabbitMQ, Elasticsearch, ...}. 
-% \todo{inserire link a https://nightlies.apache.org/flink/flink-docs-release-1.18/docs/dev/datastream/overview/#data-sinks, anche qui, appendice o footnote}
+\footnote{Connectors predefiniti: \url{https://nightlies.apache.org/flink/flink-docs-release-1.18/docs/dev/datastream/overview/\#data-sources}}
 Inoltre si posso trovare \textit{connectors} sviluppati da terza parti ed è sempre possibile implementarne di nuovi in base alle proprie esigenze.  
 
 
@@ -196,10 +192,9 @@ Un esempio dei vari tipi di finestra è mostrato in figura \ref{fig:flink_window
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{images/flink/windows.png}
-    \caption{Tipi di finestra}
+    \caption{Tipi di finestra. DataFibers \cite{flinkWindowing}}
     \label{fig:flink_window}
 \end{figure}
-\cite{flinkWindowing}
 
 \subsubsection{Wartermarks}
 \label{subsubsec:flink_watermarks}

@@ -133,8 +133,7 @@ Quando una nuova regola arriva dalla sorgente del flusso di regole, questa viene
 con la nuova regola, secondo quanto definito nel codice. In questo modo ogni nodo ha sempre una copia aggiornata delle regole da poter confrontare con i dati in arrivo sul flusso principale.
 Quando invece un dato arriva sul flusso principale questi viene direttamente analizzato dal nodo che, eventualmente avvalendosi del \textit{Broadcast State}, lo elabora 
 secondo quanto definito dalla logica implementativa.\\\\
-Ad esempio (esempio presente nella documentazione di FLink, \textit{A Practical Guide to Broadcast State in Apache Flink} \cite{:w
-broadcastStatePatternGuide}),
+Ad esempio (esempio presente nella documentazione di FLink, \textit{A Practical Guide to Broadcast State in Apache Flink} \cite{broadcastStatePatternGuide}),
 se una compagnia volesse analizzare le abitudini di acquisto su un e-commerce dei loro clienti 
 potrebbe avvalersi di un \textit{Rules Based Stream Processing}. Quindi si avrebbero due stream, uno contenente tutte le operazioni svolte da un utente,
 l'altro contenente il pattern che vogliamo analizzare, come mostrato in figura \ref{fig:broadcastState1}.

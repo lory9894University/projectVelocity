@@ -25,6 +25,13 @@
                 "%DOC%"
             ]
         },
+        {
+            "name": "bibtex",
+            "command": "bibtex",
+            "args": [
+                "%DOCFILE%"
+            ]
+        }
     ],
     "cSpell.language": "en,it"
 }
