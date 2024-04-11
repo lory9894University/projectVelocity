@@ -61,7 +61,7 @@ La maggior parte di questi non è rilevante per il microservizio \textit{EventEx
 \end{itemize}
 Ogni \textit{Business Event} contiene una lista di \textit{Signaling Event}, ognuno dei quali rappresenta un cambiamento di stato del dato. I campi più rilevanti di un \textit{Signaling Event} sono:
 \begin{itemize}
-    \item EventCode: Codice ERP dell'evento, identifica una categoria di eventi (STC, DCI, STD) \todo{esattamente cosa vogliano dire questi codici non lo so, informarsi} .
+    \item EventCode: Codice ERP dell'evento, identifica una categoria di eventi (\texttt{GEO} aggiornamento geolocalizzazione, COR (Consegna Regolare), etc ...)
     \item OperationType: Tipo di operazione, può essere c - Creazione, u - Modifica,udd - Cancellazione.
     \item EventUser: utente che ha generato l'evento. 
 \end{itemize}
