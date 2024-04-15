@@ -208,7 +208,9 @@ Le due funzioni, \texttt{processElement} e \texttt{processBroadcastElement}, son
     (\textit{TradingPartner + BusinessObjectType + ERPCode}).
     \item \texttt{processElement} (riga 17) è la funzione che processa i dati del flusso principale, cioè i \textit{Business Event}.
     Quando un nuovo elemento arriva questa funzione per prima cosa ricalcola la chiave con cui andare a cercare le regole nel \textit{Broadcast State} (riga 20).
-    Poi controlla se la chiave è presente nel \textit{Broadcast State} (riga 24), se non è presente viene segnalato l'errore tramite log4j \todo{parlare di cos'è log4j}, altrimenti si procede con l'elaborazione.
+    Poi controlla se la chiave è presente nel \textit{Broadcast State} (riga 24), se non è presente viene segnalato l'errore tramite log4j 
+    \footnote{\texttt{log4j} è un framework Java per la gestione dei log. Permette la scrittura di regole di logging e la gestione automatica dei logfile e della console}.
+    , altrimenti si procede con l'elaborazione.
     Nell'elaborazione avviene un controllo riguardo lo stato della regola (riga 27), se la regola è attiva viene restituita una tripla (Tuple3) così composta:
     \begin{itemize}
         \item \texttt{SignalingTopicRecord}: Record ottenuto dal \textit{Topic}.
