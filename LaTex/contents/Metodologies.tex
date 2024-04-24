@@ -1,0 +1,72 @@
+\chapter{Greenfield vs Brownfield software development}
+\label{ch:greenfield_vs_brownfield}
+La scrittura di software nell'ambito di un progetto complesso richiede la scelta di diverse metodologie di sviluppo.
+Queste metodologie influenzano sia la struttura del progetto e come il software viene sviluppato (ad esempio \textit{DevOps}) 
+che il modo in cui il team di sviluppo lavora (ad esempio \textit{Agile}).
+La scelta di applicare una metodologia piuttosto che un'altra (o anche diverse metodologie in parallelo) dipende da diversi fattori, tra cui la complessità del progetto,
+la dimensione del team di sviluppo e l'organizzazione dello stesso.\\
+Nell'ambito della scrittura di un software che va a sostituire un software già esistente, si possono distinguere due metodologie di sviluppo: \texttt{Greenfield} e \texttt{Brownfield}.
+
+\section{Greenfield software development}
+\label{sec:greenfield}
+Lo \textit{sviluppo Greenfield} è una metodologia di sviluppo software che si basa sulla creazione di un nuovo software da zero, senza alcun vincolo o dipendenza da software preesistenti.
+Il team di sviluppo ha quindi la possibilità di scegliere le tecnologie e le metodologie di sviluppo che ritiene più adatte al progetto, e di sviluppare il software come preferisce.
+Questo approcio presenta diversi vantaggi, tra cui:
+\begin{itemize}
+    \item \textbf{Tecnologie più efficaci}: Potendo scegliere le tecnologie da utilizzare, il team di sviluppo può scegliere le migliori tecnologie disponibili per il progetto. 
+    In generale tecnologie più recenti e avanzate rispetto a quelle utilizzate in software preesistenti permettono la scrittura di codice più efficiente e performante.  
+    \item \textbf{Libertà di scelta}: lo sviluppo di un nuovo software da zero è generalmente più semplice rispetto alla modifica di un software preesistente, dato che presnta pochi vincoli.
+    Non essendoci vincoli software, nozionali o di business, il team di sviluppo ha la possibilità di sviluppare il software come preferisce.
+    \item \textbf{Software più strutturato}: la possibilità di sviluppare il software da zero permette di creare un software più strutturato e organizzato, quindi più manutenibile ed estendiile.
+    L'estensione di un software \textit{legacy} in generale porta a un software più disorganizzato e difficile da mantenere.
+\end{itemize}
+Tuttavia, lo sviluppo di un software da zero presenta anche diversi svantaggi:
+\begin{itemize}
+    \item \textbf{Tempo}: Lo sviluppo di un software da zero richiede tempo, in quanto è necessario sviluppare tutte le funzionalità.
+    Deve essere considerato anche il tempo necessario alla formazione del team di sviluppo sulle eventuali nuove tecnologie scelte.
+    \item \textbf{Costi}: Lo sviluppo di un software da zero richiede maggiori risorse, necessitando di maggiore tempo e di eventuali nuove tecnologie.
+    (costi dovuti a licenze software, formazione del personale, nuove infrastrutture, etc ...)
+    \item \textbf{Rischio}: Dato che le tecnologie e le metodologie di sviluppo sono innovative, esiste il rischio che queste non siano le migliori per il progetto.
+    Il team di sviluppo potrebbe non avere esperienza con le nuove tecnologie, e quindi potrebbe rendersi conto di questo problema molto avanti nello sviluppo del software.
+    \item \textbf{Attuabilità}: Spesso lo sviluppo \textit{Greenfield} di un software non è attuabile, in quanto il software preesistente è troppo complesso o troppo integrato con altre parti del sistema.
+\end{itemize}
+
+\section{Brownfield software development}
+\label{sec:brownfield}
+Lo \textit{sviluppo Brownfield} è una metodologia di sviluppo software che si basa sulla modifica graduale di un software preesistente, integrando nuove funzionalità o modificando quelle esistenti.
+Questa è la situazione più comune in ambito lavorativo, in quanto la maggior parte delle aziende possiede software preesistenti che necessitano di manutenzione o estensione.
+Lo sviluppo \textit{Brownfield} presenta diversi vantaggi:
+\begin{itemize}
+    \item \textbf{Riduzione dei costi}: Estendere un software preesistente è generalmente più economico e richiede meno tempo rispetto allo sviluppo di un software da zero.
+    parte del software è già sviluppata e testata, quindi non è necessario svilupparla nuovamente.
+    \item \textbf{Maggiore controllo}: Essendo la transizione graduale i nuovi componenti possono essere testati e integrati in modo più controllato ed incrementale.
+    \item \textbf{Progetto già strutturato}: Essendoci una base già esistente non bisogna preoccuparsi di implementare nuove tecnologie o sviluppare nuove architetture.
+    Questo riduce i rischi ed l'impiego di tempo necessario all' introduzione di nuove tecnologie.
+\end{itemize} 
+Naturalmente, lo sviluppo di un software preesistente presenta anche diversi svantaggi:
+\begin{itemize}
+    \item \textbf{Vincoli}: Lo sviluppo di un software preesistente presenta diversi vincoli.
+    Questi vincoli possono limitare le scelte del team di sviluppo, ad esempio limitando le tecnologie che possono essere utilizzate.
+    \item \textbf{Complessità}: Lo sviluppo di un software preesistente è generalmente più complesso rispetto allo sviluppo di un software da zero, in quanto bisogna implementare software che sia
+    compatibile con il software preesistente. Richiede una maggiore competenza di business ed una maggiore comprensione del software preesistente.
+    \item \textbf{Manutenibilità}: Lo sviluppo di un software preesistente può rendere il software più disorganizzato e difficile da mantenere, in quanto le modifiche possono portare a \textit{spaghetti code}.
+\end{itemize}
+Quasi sempre nella realtà ci si trova obbligati ad utilizzare un approccio \textit{Brownfield}, dato che la riscrittura di un software da zero è spesso troppo onerosa.
+
+\section{Approcio Brownfield per la transizione a microservizi}
+\label{sec:brownfield_microservices}
+Nel caso della transizione da un'architettura monolitica ad un'architettura a microservizi, come nel caso di questo progetto, l'approcio \textit{Brownfield} è molto comune.
+Al posto di riscrivere tutto il sistema basandolo su microservizi, si preferisce migrare gradualmente il sistema esistente verso un'architettura a microservizi,
+integrando di volta in volta i nuovi servizi implementati con il sistema esistente.
+Questo approccio si sviluppa in diverse fasi:
+In primo luogo il sistema esistente viene analizzato, andado ad identificare le varie responsabilità basandosii sulla \textit{business logic}.
+Avendo identificato le varie responsabilità si procede iterativamente:
+\begin{enumerate}
+    \item \textbf{Categorrizazione}: Si categorizzano le varie responsabilità in base alla loro complessità e alla loro dipendenza con altre parti del sistema.
+    \item \textbf{Composizione}: Per ogni "categoria" si sviluppa un microservizio che si prenda carico di tutte le responsabilità della categoria.
+    \item \textbf{Integrazione}: Il microservizio sviluppato viene integrato con il sistema esistente, sostituendo la parte di sistema che si occupava delle responsabilità.
+    La parte di sistema sostituita viene generalmente mantenuta, perchè spesso non è possibile estrarla dal sistema. Quindi è molto comune che per un periodo di tempo
+    limitato coesistano due sistemi che si occupano delle stesse responsabilità (un microservizio ed una parte del sistema monolitico).
+\end{enumerate}
+Una volta eseguite queste fasi per tutte le responsabilità del sistema, il sistema monolitico è stato completamente sostituito da un sistema a microservizi e può essere rimosso.
+Questo approccio permette una transizione graduale e controllata, riducendo i rischi e permettendo di mantenere il sistema completamente funzionante durante la transizione.

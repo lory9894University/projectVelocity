@@ -1,7 +1,7 @@
 \chapter{Architettura del sistema}
 \label{ch:architecture}
 Il \textit{Progetto Velocity} è una parte di un sistema di Track\&Trace il cui scopo è il monitoraggio in near real time della logistica.
-Al momento il sistema monolitico legacy gestisce tutto, il nuovo sistema, il cui primo componente è \textit{Velocity}, lo soppianterà gradualmente, seguendo un approccio \textit{brownfield}.
+Al momento il sistema monolitico legacy gestisce tutto, il nuovo sistema, il cui primo componente è \textit{Velocity}, lo soppianterà gradualmente, seguendo un approccio \textit{brownfield} (sezione \ref{sec:brownfield_microservices}). 
 In questo momento si stanno sviluppando i nuovi servizi e li si sta integrando con il vecchio sistema, i nuovi clienti vengono direttamente gestiti con le componenti
 funzionanti del nuovo sistema, i clienti che invece venivano gestiti con il sistema legacy stanno venendo gradualmente trasferiti.
 
@@ -63,7 +63,7 @@ Al momento ci sono quindi due sistemi di \textit{T\&T}, uno alimentato da \texti
 I due sistemi \textit{T\&T} sono sviluppati in \texttt{.NET}, il vecchio è un servizio Windows che gira su un server virtuale, 
 il nuovo è una \texttt{Azure function} (simili alle AWS lambda), che si trova sul cloud Azure ed è in ascolto sui \textit{Kafka topic} su cui opera \textit{Velocity}.
 \\\\
-Velocity presenta una limitazione, lavorando con approccio \textit{Brownfield} deve interfacciarsi con i vecchi sistemi, sia in input che in output.
+Velocity presenta una limitazione, lavorando con approccio \textit{Brownfield} (sezione \ref{sec:brownfield_microservices}) deve interfacciarsi con i vecchi sistemi, sia in input che in output.
 L'input arriva dal \textit{TMS} e per renderlo compatibile viene usato \texttt{Debezium} (sezione \ref{sec:debezium_overview}), generando un flusso di eventi.
 In output invece il problema è che \textit{Velocity} non implementa tutte le funzionalità del vecchio sistema, ma solo una parte.
 In particolare la fase finale di comunicazione con i clienti (invio di email, aggiornamento del portale web, etc..) non è implementata in Velocity,
